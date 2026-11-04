@@ -24,8 +24,8 @@ export interface JudgedClaim {
 }
 
 export interface Judgment {
-  /** 규칙 번호 (`판단규칙_초안.md`의 규칙 번호). */
-  ruleNo: number;
+  /** 규칙 번호 (`판단규칙_초안.md`의 규칙 번호). 번호가 없는 기본 원칙(등기 순서 등)은 `null`. */
+  ruleNo: number | null;
   ruleName: string;
   a: JudgedClaim;
   b: JudgedClaim;
@@ -44,6 +44,12 @@ export interface Judgment {
 export interface TaxPart {
   claim: TaxClaim;
   item: TaxItem;
+}
+
+/** 비교 대상 a와 b를 맞바꾼다. 결과(winner)도 함께 뒤집는다. */
+export function swapJudgment(judgment: Judgment): Judgment {
+  const flipped: Record<Winner, Winner> = { a: "b", b: "a", equal: "equal", undetermined: "undetermined" };
+  return { ...judgment, a: judgment.b, b: judgment.a, winner: flipped[judgment.winner] };
 }
 
 export function judgedClaim(claim: Claim): JudgedClaim {

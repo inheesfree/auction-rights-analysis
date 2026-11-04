@@ -12,3 +12,8 @@ export { judgeChargeVsSecured, judgeChargeVsLease } from "./publicCharge";
 export { judgeMortgageVsDangHaeSe } from "./mortgageDangHaeSe";
 export { judgeMortgageVsProvisional } from "./mortgageSeizure";
 export { judgeWageVsTax, judgeChargeVsTax, judgeTaxVsProvisional } from "./fixedPriority";
+// 작업 8: 배분 계산에 필요한 쌍 판단
+export { judgePair, type PairResult } from "./pairs";
+export type { Participant, ParticipantKind } from "./participant";
+export { swapJudgment } from "./judgment";
+export * from "./others";
