@@ -71,6 +71,7 @@ export const KIND_FIELDS: Record<SupportedRightKind, FieldDef[]> = {
     { key: "taxType", label: "국세/지방세", type: "taxType" },
     { key: "seizureDate", label: "압류일", type: "date", hint: "교부청구만 했으면 비워 두세요" },
     { key: "hasParticipatingSeizure", label: "참가압류 여부", type: "yesNo" },
+    { key: "hasTaxCollateral", label: "납세담보 여부", type: "yesNo", hint: "담보가 있는 조세는 다른 조세보다 우선합니다" },
   ],
   publicCharge: [{ key: "dueDate", label: "납부기한", type: "date", hint: "법정기일처럼 비교합니다" }],
   wage: [{ key: "wageType", label: "임금 구분", type: "wageType" }],
@@ -233,6 +234,7 @@ export function buildClaim(
         items,
         seizureDate: toDate(values.seizureDate, "압류일", bad),
         hasParticipatingSeizure: toYesNo(values.hasParticipatingSeizure),
+        hasTaxCollateral: toYesNo(values.hasTaxCollateral),
       };
       break;
     }
@@ -362,6 +364,11 @@ export function toClaimRow(claim: Claim): ClaimRow {
       }
       if (claim.seizureDate !== null) row.notes.push(dateCell("압류일", claim.seizureDate));
       if (claim.hasParticipatingSeizure === true) row.notes.push({ text: "참가압류", blank: false });
+      row.notes.push(
+        claim.hasTaxCollateral === null
+          ? { text: `납세담보 ${BLANK}`, blank: true }
+          : { text: claim.hasTaxCollateral ? "납세담보 있음" : "납세담보 없음", blank: false },
+      );
       break;
     }
     case "publicCharge":

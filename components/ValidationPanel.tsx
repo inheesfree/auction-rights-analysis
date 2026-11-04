@@ -15,20 +15,41 @@ function groupByClaim(issues: Issue[]): { label: string; messages: string[] }[] 
   return [...groups.values()];
 }
 
+/** 계산은 할 수 있지만 알려 둘 것 (예: 확정일자 없는 임차인은 배분 0원). */
+function NoticeBox({ notices }: { notices: Issue[] }) {
+  if (notices.length === 0) return null;
+  return (
+    <div className="space-y-2 rounded border border-sky-300 bg-sky-50 p-3 text-sm text-sky-900 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-200">
+      <p className="font-semibold">알려 드립니다</p>
+      <ul className="list-disc space-y-1 pl-5">
+        {groupByClaim(notices).map((group) => (
+          <li key={group.label}>
+            <span className="font-medium">{group.label}</span>: {group.messages.join(" ")}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export default function ValidationPanel({ result }: { result: ValidationResult }) {
-  const others = result.issues.filter((issue) => issue.kind !== "unsupported");
+  const others = result.issues.filter((issue) => issue.kind !== "unsupported" && issue.kind !== "notice");
 
   if (result.canCalculate) {
     return (
-      <p className="rounded border border-green-300 bg-green-50 p-3 text-sm text-green-900 dark:border-green-700 dark:bg-green-950 dark:text-green-200">
-        입력에 문제가 없습니다. (순위 분석과 배분 계산은 이후 단계에서 붙습니다.)
-      </p>
+      <div className="space-y-3">
+        <p className="rounded border border-green-300 bg-green-50 p-3 text-sm text-green-900 dark:border-green-700 dark:bg-green-950 dark:text-green-200">
+          입력에 문제가 없습니다. (순위 분석과 배분 계산은 이후 단계에서 붙습니다.)
+        </p>
+        <NoticeBox notices={result.notices} />
+      </div>
     );
   }
 
   return (
     <div className="space-y-3">
       <p className="text-sm font-medium">아직 계산할 수 없습니다. 아래를 확인해 주세요.</p>
+      <NoticeBox notices={result.notices} />
 
       {result.unsupported.length > 0 ? (
         <div

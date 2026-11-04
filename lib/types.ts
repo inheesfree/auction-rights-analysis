@@ -145,6 +145,8 @@ export interface TaxClaim extends ClaimBase {
   seizureDate: Blank<DateString>;
   /** 참가압류 여부. */
   hasParticipatingSeizure: Blank<boolean>;
+  /** 납세담보 여부. 담보가 있는 조세는 다른 조세보다 우선한다 (판단규칙 규칙 7). */
+  hasTaxCollateral: Blank<boolean>;
 }
 
 /** 공과금 (건강보험료 등). */

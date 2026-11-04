@@ -5,15 +5,17 @@
 // 이 파일은 입력 단계에서 알 수 있는 문제만 다룬다. 같은 입력이면 항상 같은 결과가 나온다.
 
 import { formatWon, sumWon } from "./money";
-import { RIGHT_KIND_LABELS, type Blank, type Claim } from "./types";
+import { claimLabel } from "./claimLabel";
+import type { Blank, Claim } from "./types";
 
 /**
  * 문제의 종류.
  * - missing: 계산에 꼭 필요한 값이 비어 있다 (못 읽은 값 포함)
  * - invalid: 값끼리 맞지 않는다
  * - unsupported: 이 앱이 다루지 않는 권리나 경우다
+ * - notice: 계산은 할 수 있지만 알려 둘 것이 있다 (예: 확정일자 없는 임차인은 배분 0원)
  */
-export type IssueKind = "missing" | "invalid" | "unsupported";
+export type IssueKind = "missing" | "invalid" | "unsupported" | "notice";
 
 export interface Issue {
   /** 문제가 있는 채권의 번호. 채권 전체에 관한 문제면 `null`. */
@@ -28,19 +30,16 @@ export interface ValidationResult {
   issues: Issue[];
   /** 이 앱이 다루지 않는 경우를 모은 것 (`issues` 중 `unsupported`). */
   unsupported: Issue[];
-  /** 문제가 하나도 없어야 `true`. 다루지 않는 경우가 하나라도 있으면 계산하지 않는다. */
+  /** 계산은 할 수 있지만 알려 둘 것 (`issues` 중 `notice`). */
+  notices: Issue[];
+  /** 막는 문제(`notice` 제외)가 하나도 없어야 `true`. 다루지 않는 경우가 하나라도 있으면 계산하지 않는다. */
   canCalculate: boolean;
-}
-
-function labelOf(claim: Claim): string {
-  const who = claim.creditor === "" ? "채권자 미입력" : claim.creditor;
-  return `${RIGHT_KIND_LABELS[claim.kind]}(${who})`;
 }
 
 /** 입력 검사 결과를 모아 두는 작은 도구. */
 function collector(claim: Claim) {
   const issues: Issue[] = [];
-  const label = labelOf(claim);
+  const label = claimLabel(claim);
   const add = (kind: IssueKind, message: string) =>
     issues.push({ claimId: claim.id, claimLabel: label, kind, message });
   /** 값이 비어 있으면 "필요한 값" 문제로 기록한다. */
@@ -81,12 +80,15 @@ function validateClaim(claim: Claim): Issue[] {
       if (claim.isHousing === false) {
         add("unsupported", "주택이 아닌 임차보증금은 이 앱이 다루지 않는 경우입니다.");
       }
-      // 전입일과 확정일자가 모두 있어야 대항력 있는 임차인으로 본다 (담당자 확인).
       need(claim.moveInDate, "전입일");
-      need(claim.fixedDate, "확정일자");
+      // 확정일자가 없는 임차인은 배분을 받지 못한다 (담당자 확인). 계산을 막지 않고 알려 준다.
+      if (claim.fixedDate === null) {
+        add("notice", "확정일자가 없는 임차인은 배분을 받지 못합니다(배분액 0원). 실제로 확정일자가 있다면 입력해 주세요.");
+      }
       break;
     case "tax": {
       need(claim.taxType, "국세/지방세 구분");
+      need(claim.hasTaxCollateral, "납세담보 여부");
       if (claim.items.length === 0) {
         add("missing", "세목이 하나도 없습니다. 세목별 법정기일을 넣어야 순위를 판단할 수 있습니다.");
         break;
@@ -145,6 +147,7 @@ export function validateClaims(claims: readonly Claim[]): ValidationResult {
   return {
     issues,
     unsupported: issues.filter((issue) => issue.kind === "unsupported"),
-    canCalculate: issues.length === 0,
+    notices: issues.filter((issue) => issue.kind === "notice"),
+    canCalculate: issues.every((issue) => issue.kind === "notice"),
   };
 }
