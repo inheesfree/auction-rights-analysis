@@ -7,10 +7,12 @@
 
 import { formatDate, laterDate, parseDate } from "./dates";
 import { formatWon, parseWon } from "./money";
+import { LEASE_REGIONS, LEASE_REGION_LABELS } from "./types";
 import type {
   Blank,
   Claim,
   DateString,
+  LeaseRegion,
   RightKind,
   SupportedRightKind,
   TaxItem,
@@ -24,7 +26,7 @@ import type {
 // ---------------------------------------------------------------------------
 
 /** 입력칸의 모양. */
-export type FieldType = "text" | "won" | "date" | "yesNo" | "taxType" | "wageType";
+export type FieldType = "text" | "won" | "date" | "yesNo" | "taxType" | "wageType" | "region";
 
 export interface FieldDef {
   /** 입력값을 담는 이름. */
@@ -34,6 +36,8 @@ export interface FieldDef {
   type: FieldType;
   /** 입력 도움말. */
   hint?: string;
+  /** 다른 칸이 이 값일 때만 보여준다. 예: 주택 여부가 "아니오"일 때만 월세 칸을 보여준다. */
+  showWhen?: { key: string; equals: string };
 }
 
 /** 입력 글자 모음. 칸 이름 → 입력한 글자. */
@@ -64,8 +68,8 @@ export const KIND_FIELDS: Record<SupportedRightKind, FieldDef[]> = {
     { key: "moveInDate", label: "전입일", type: "date", hint: "예: 2021-03-02" },
     { key: "fixedDate", label: "확정일자", type: "date", hint: "전입일과 확정일자 중 늦은 날이 기준일입니다" },
     { key: "isHousing", label: "주택 여부", type: "yesNo" },
-    { key: "location", label: "소재지", type: "text", hint: "소액임차 기준표 확정 후 필요 여부를 정합니다" },
-    { key: "contractDate", label: "임대차 계약 시점", type: "date", hint: "소액임차 기준표 확정 후 필요 여부를 정합니다" },
+    { key: "region", label: "소재지 구분", type: "region", hint: "소액임차인 기준표의 지역 구분입니다" },
+    { key: "monthlyRent", label: "월세", type: "won", hint: "상가 등 주택이 아닌 경우만 입력", showWhen: { key: "isHousing", equals: "no" } },
   ],
   tax: [
     { key: "taxType", label: "국세/지방세", type: "taxType" },
@@ -151,6 +155,10 @@ function toTaxType(raw: string | undefined): Blank<TaxType> {
   return raw === "national" || raw === "local" ? raw : null;
 }
 
+function toRegion(raw: string | undefined): Blank<LeaseRegion> {
+  return (LEASE_REGIONS as readonly string[]).includes(raw ?? "") ? (raw as LeaseRegion) : null;
+}
+
 function toWageType(raw: string | undefined): Blank<WageType> {
   return raw === "last3Months" || raw === "general" ? raw : null;
 }
@@ -213,8 +221,9 @@ export function buildClaim(
         moveInDate: toDate(values.moveInDate, "전입일", bad),
         fixedDate: toDate(values.fixedDate, "확정일자", bad),
         isHousing: toYesNo(values.isHousing),
-        location: toText(values.location),
-        contractDate: toDate(values.contractDate, "임대차 계약 시점", bad),
+        region: toRegion(values.region),
+        // 월세는 주택이 아닌 임차(상가)일 때만 받는다.
+        monthlyRent: values.isHousing === "no" ? toWon(values.monthlyRent, "월세", bad) : null,
       };
       break;
     case "tax": {
@@ -347,6 +356,12 @@ export function toClaimRow(claim: Claim): ClaimRow {
         ];
       }
       row.notes.push(yesNoNote("주택", claim.isHousing));
+      row.notes.push(
+        claim.region === null
+          ? { text: `소재지 구분 ${BLANK}`, blank: true }
+          : { text: `소재지: ${LEASE_REGION_LABELS[claim.region]}`, blank: false },
+      );
+      if (claim.monthlyRent !== null) row.notes.push({ text: `월세 ${formatWon(claim.monthlyRent)}`, blank: false });
       break;
     }
     case "tax": {

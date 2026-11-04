@@ -12,7 +12,7 @@ import {
   type FieldDef,
   type FormValues,
 } from "@/lib/claimForm";
-import { RIGHT_KIND_LABELS, type RightKind } from "@/lib/types";
+import { LEASE_REGIONS, LEASE_REGION_LABELS, RIGHT_KIND_LABELS, type RightKind } from "@/lib/types";
 
 const INPUT_CLASS =
   "w-full rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900";
@@ -55,6 +55,18 @@ function FieldInput({
           <option value="">(빈칸)</option>
           <option value="last3Months">최종 3개월분 (최우선변제)</option>
           <option value="general">일반 임금</option>
+        </select>
+      );
+      break;
+    case "region":
+      input = (
+        <select id={inputId} className={INPUT_CLASS} value={value} onChange={(e) => onChange(e.target.value)}>
+          <option value="">(빈칸)</option>
+          {LEASE_REGIONS.map((region) => (
+            <option key={region} value={region}>
+              {LEASE_REGION_LABELS[region]}
+            </option>
+          ))}
         </select>
       );
       break;
@@ -134,7 +146,9 @@ export default function ClaimForm({ onAdd }: ClaimFormProps) {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        {[...COMMON_FIELDS, ...fieldsForKind(kind)].map((def) => (
+        {[...COMMON_FIELDS, ...fieldsForKind(kind)]
+          .filter((def) => !def.showWhen || values[def.showWhen.key] === def.showWhen.equals)
+          .map((def) => (
           <FieldInput
             key={`${kind}-${def.key}`}
             def={def}

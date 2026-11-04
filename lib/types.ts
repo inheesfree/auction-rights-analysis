@@ -105,6 +105,18 @@ export interface JeonseClaim extends ClaimBase {
   isHousing: Blank<boolean>;
 }
 
+/** 소액임차인 기준표의 지역 구분 (주택임대차보호법 시행령 제10조). */
+export const LEASE_REGIONS = ["seoul", "overcrowded", "metro", "other"] as const;
+export type LeaseRegion = (typeof LEASE_REGIONS)[number];
+
+/** 화면에 보여줄 지역 구분 이름. 정확한 지역 범위는 시행령 제10조 제1항을 따른다. */
+export const LEASE_REGION_LABELS: Record<LeaseRegion, string> = {
+  seoul: "서울특별시",
+  overcrowded: "과밀억제권역(서울 제외)·세종·용인·화성·김포",
+  metro: "광역시·안산·광주·파주·이천·평택 (과밀억제권역·군지역 제외)",
+  other: "그 밖의 지역",
+};
+
 /** 주택임차보증금. */
 export interface LeaseClaim extends ClaimBase {
   kind: "lease";
@@ -114,10 +126,10 @@ export interface LeaseClaim extends ClaimBase {
   fixedDate: Blank<DateString>;
   /** 주택인지 여부. */
   isHousing: Blank<boolean>;
-  /** 소액임차 기준표 확정 후 필요 여부를 결정하는 항목: 소재지. */
-  location: Blank<string>;
-  /** 소액임차 기준표 확정 후 필요 여부를 결정하는 항목: 임대차 계약 시점. */
-  contractDate: Blank<DateString>;
+  /** 소재지 구분. 소액임차인의 보증금 기준과 최우선변제금이 지역마다 달라서 필요하다. */
+  region: Blank<LeaseRegion>;
+  /** 월세. 주택이 아닌 임차(상가)일 때만 입력받는다. */
+  monthlyRent: Blank<Won>;
 }
 
 /** 국세/지방세 구분. */

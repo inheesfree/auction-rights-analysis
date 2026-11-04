@@ -78,12 +78,15 @@ function validateClaim(claim: Claim): Issue[] {
     case "lease":
       need(claim.isHousing, "주택 여부");
       if (claim.isHousing === false) {
-        add("unsupported", "주택이 아닌 임차보증금은 이 앱이 다루지 않는 경우입니다.");
+        add("unsupported", "주택이 아닌 임차보증금(상가 등)은 이 앱이 아직 계산하지 않습니다. (상가 소액임차 기준표가 필요합니다.)");
+      } else {
+        need(claim.region, "소재지 구분");
       }
       need(claim.moveInDate, "전입일");
-      // 확정일자가 없는 임차인은 배분을 받지 못한다 (담당자 확인). 계산을 막지 않고 알려 준다.
+      // 확정일자가 없는 임차인은 소액임차인에 해당할 때만 최우선변제를 받고, 나머지 보증금은 배분을 받지 못한다
+      // (담당자 확인). 계산을 막지 않고 알려 준다.
       if (claim.fixedDate === null) {
-        add("notice", "확정일자가 없는 임차인은 배분을 받지 못합니다(배분액 0원). 실제로 확정일자가 있다면 입력해 주세요.");
+        add("notice", "확정일자가 없는 임차인은 소액임차인에 해당하는 경우에만 최우선변제를 받고, 그 밖의 보증금은 배분을 받지 못합니다. 실제로 확정일자가 있다면 입력해 주세요.");
       }
       break;
     case "tax": {
