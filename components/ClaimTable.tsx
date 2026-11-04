@@ -2,7 +2,7 @@
 // Plan SC: 작업 3 — 빈칸은 추측해서 채우지 않고 눈에 띄게 표시한다.
 
 import { toClaimRow, type Cell } from "@/lib/claimForm";
-import { RIGHT_KIND_LABELS, type SupportedClaim } from "@/lib/types";
+import { RIGHT_KIND_LABELS, type Claim } from "@/lib/types";
 
 /** 표의 한 칸. 빈칸이면 붉게 강조한다. */
 function CellText({ cell }: { cell: Cell }) {
@@ -31,7 +31,7 @@ function CellList({ cells }: { cells: Cell[] }) {
 }
 
 interface ClaimTableProps {
-  claims: SupportedClaim[];
+  claims: Claim[];
   /** 주면 줄마다 삭제 버튼이 나타난다. */
   onRemove?: (id: string) => void;
 }

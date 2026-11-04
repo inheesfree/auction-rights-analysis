@@ -11,7 +11,7 @@ import type {
   Blank,
   Claim,
   DateString,
-  SupportedClaim,
+  RightKind,
   SupportedRightKind,
   TaxItem,
   TaxType,
@@ -89,8 +89,12 @@ export const TAX_ITEM_FIELDS: FieldDef[] = [
   { key: "isDangHaeSe", label: "당해세 여부", type: "yesNo" },
 ];
 
-/** 권리 종류 선택에 쓰는 순서. */
-export const SELECTABLE_KINDS: SupportedRightKind[] = [
+/**
+ * 권리 종류 선택에 쓰는 순서.
+ * 이 앱이 다루지 않는 권리(담보가등기, 필요비·유익비)도 고를 수 있게 마지막에 둔다.
+ * 고르면 계산하지 않고 "이 앱이 다루지 않는 경우"로 안내한다 (lib/validate.ts).
+ */
+export const SELECTABLE_KINDS: RightKind[] = [
   "mortgage",
   "lease",
   "tax",
@@ -99,7 +103,14 @@ export const SELECTABLE_KINDS: SupportedRightKind[] = [
   "provisionalSeizure",
   "jeonse",
   "dispositionCost",
+  "securityProvisionalRegistration",
+  "necessaryExpense",
 ];
+
+/** 권리 종류에 따라 추가로 받는 칸. 다루지 않는 권리는 공통 칸만 받는다. */
+export function fieldsForKind(kind: RightKind): FieldDef[] {
+  return kind in KIND_FIELDS ? KIND_FIELDS[kind as SupportedRightKind] : [];
+}
 
 // ---------------------------------------------------------------------------
 // 입력 글자 → 채권
@@ -145,7 +156,7 @@ function toWageType(raw: string | undefined): Blank<WageType> {
 
 /** 입력 글자로 채권을 만든 결과. */
 export interface BuiltClaim {
-  claim: SupportedClaim;
+  claim: Claim;
   /** 글자는 있었지만 날짜·금액으로 읽지 못해 빈칸으로 둔 칸 이름. */
   unreadable: string[];
 }
@@ -156,7 +167,7 @@ export interface BuiltClaim {
  */
 export function buildClaim(
   id: string,
-  kind: SupportedRightKind,
+  kind: RightKind,
   values: FormValues,
   taxItems: FormValues[],
   isEntrusted: boolean,
@@ -170,8 +181,13 @@ export function buildClaim(
     ...(isEntrusted ? { isEntrusted: true } : {}),
   };
 
-  let claim: SupportedClaim;
+  let claim: Claim;
   switch (kind) {
+    case "securityProvisionalRegistration":
+    case "necessaryExpense":
+      // 이 앱이 다루지 않는 권리: 공통 항목만 담아 두고 계산에는 넣지 않는다.
+      claim = { ...base, kind };
+      break;
     case "mortgage":
       claim = {
         ...base,
@@ -279,7 +295,7 @@ function yesNoNote(label: string, value: Blank<boolean>): Cell {
 }
 
 /** 채권을 확인 표 한 줄로 바꾼다. 비어 있는 값은 `blank: true`로 표시한다. */
-export function toClaimRow(claim: SupportedClaim): ClaimRow {
+export function toClaimRow(claim: Claim): ClaimRow {
   const row: ClaimRow = {
     id: claim.id,
     kind: claim.kind,
@@ -359,6 +375,10 @@ export function toClaimRow(claim: SupportedClaim): ClaimRow {
       );
       break;
     case "dispositionCost":
+      break;
+    case "securityProvisionalRegistration":
+    case "necessaryExpense":
+      row.notes.push({ text: "이 앱이 다루지 않는 권리", blank: false });
       break;
   }
 

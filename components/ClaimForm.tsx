@@ -6,13 +6,13 @@
 import { useId, useState } from "react";
 import {
   COMMON_FIELDS,
-  KIND_FIELDS,
+  fieldsForKind,
   SELECTABLE_KINDS,
   TAX_ITEM_FIELDS,
   type FieldDef,
   type FormValues,
 } from "@/lib/claimForm";
-import { RIGHT_KIND_LABELS, type SupportedRightKind } from "@/lib/types";
+import { RIGHT_KIND_LABELS, type RightKind } from "@/lib/types";
 
 const INPUT_CLASS =
   "w-full rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900";
@@ -84,12 +84,12 @@ function FieldInput({
 
 interface ClaimFormProps {
   /** 「채권 추가」를 누르면 입력 글자를 부모에게 넘긴다. 채권으로 바꾸는 일은 부모(ClaimEditor)가 한다. */
-  onAdd: (kind: SupportedRightKind, values: FormValues, taxItems: FormValues[], isEntrusted: boolean) => void;
+  onAdd: (kind: RightKind, values: FormValues, taxItems: FormValues[], isEntrusted: boolean) => void;
 }
 
 export default function ClaimForm({ onAdd }: ClaimFormProps) {
   const formId = useId();
-  const [kind, setKind] = useState<SupportedRightKind>("mortgage");
+  const [kind, setKind] = useState<RightKind>("mortgage");
   const [values, setValues] = useState<FormValues>({});
   const [taxItems, setTaxItems] = useState<FormValues[]>([{}]);
   const [isEntrusted, setIsEntrusted] = useState(false);
@@ -99,7 +99,7 @@ export default function ClaimForm({ onAdd }: ClaimFormProps) {
     setTaxItems((prev) => prev.map((item, i) => (i === index ? { ...item, [key]: next } : item)));
 
   // 권리 종류를 바꾸면 다른 종류의 입력이 섞이지 않도록 입력칸을 비운다.
-  const changeKind = (next: SupportedRightKind) => {
+  const changeKind = (next: RightKind) => {
     setKind(next);
     setValues({});
     setTaxItems([{}]);
@@ -123,7 +123,7 @@ export default function ClaimForm({ onAdd }: ClaimFormProps) {
           id={`${formId}-kind`}
           className={INPUT_CLASS}
           value={kind}
-          onChange={(e) => changeKind(e.target.value as SupportedRightKind)}
+          onChange={(e) => changeKind(e.target.value as RightKind)}
         >
           {SELECTABLE_KINDS.map((k) => (
             <option key={k} value={k}>
@@ -134,7 +134,7 @@ export default function ClaimForm({ onAdd }: ClaimFormProps) {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        {[...COMMON_FIELDS, ...KIND_FIELDS[kind]].map((def) => (
+        {[...COMMON_FIELDS, ...fieldsForKind(kind)].map((def) => (
           <FieldInput
             key={`${kind}-${def.key}`}
             def={def}
