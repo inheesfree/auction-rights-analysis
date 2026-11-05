@@ -92,7 +92,7 @@ export default function OcrImageReader({ onRead }: OcrImageReaderProps) {
       <div>
         <h3 className="font-semibold">캡처 이미지에서 읽어 채우기</h3>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          서류 캡처 이미지를 올리거나 Ctrl+V로 붙여넣으면, 이 브라우저 안에서 글자를 읽어 아래 입력 양식에 채웁니다.
+          캡처 이미지를 올리거나 Ctrl+V로 붙여넣으면, 이 브라우저 안에서 글자를 읽어 아래 입력 양식에 채웁니다.
           이미지는 서버로 보내거나 저장하지 않습니다. 채권자 이름은 가져오지 않으니 직접 입력해 주세요.
         </p>
       </div>
