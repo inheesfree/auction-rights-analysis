@@ -3,6 +3,12 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* 시작 화면(히어로) 디자인 값 */
+  --font-heading: "Helvetica Now Display Bold", var(--font-noto-kr), sans-serif;
+  --font-body: var(--font-inter), var(--font-noto-kr), sans-serif;
+  --color-text: #192837;
+  --color-accent: #7342e2;
+  --color-login-bg: #f2f2ee;
 }
 
 @theme inline {

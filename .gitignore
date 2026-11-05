@@ -42,3 +42,6 @@ next-env.d.ts
 
 # bkit plugin state
 /.bkit/
+
+# 삭제 대기 폴더
+/trash-can/
