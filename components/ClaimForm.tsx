@@ -100,13 +100,15 @@ interface ClaimFormProps {
   onAdd: (kind: RightKind, values: FormValues, taxItems: FormValues[], isEntrusted: boolean) => void;
   /** 「수임 채권」 체크칸을 보여줄지. 담당자용에서만 쓴다. 기본값은 보여줌. */
   showEntrusted?: boolean;
+  /** 처음에 채워 둘 값(예: 캡처 이미지를 OCR로 읽은 값). 바꾸려면 부모가 `key`를 바꿔 새로 그린다. */
+  initial?: { kind: RightKind | null; values: FormValues; taxItems: FormValues[] };
 }
 
-export default function ClaimForm({ onAdd, showEntrusted = true }: ClaimFormProps) {
+export default function ClaimForm({ onAdd, showEntrusted = true, initial }: ClaimFormProps) {
   const formId = useId();
-  const [kind, setKind] = useState<RightKind>("mortgage");
-  const [values, setValues] = useState<FormValues>({});
-  const [taxItems, setTaxItems] = useState<FormValues[]>([{}]);
+  const [kind, setKind] = useState<RightKind>(initial?.kind ?? "mortgage");
+  const [values, setValues] = useState<FormValues>(initial?.values ?? {});
+  const [taxItems, setTaxItems] = useState<FormValues[]>(initial && initial.taxItems.length > 0 ? initial.taxItems : [{}]);
   const [isEntrusted, setIsEntrusted] = useState(false);
 
   const setValue = (key: string, next: string) => setValues((prev) => ({ ...prev, [key]: next }));

@@ -132,7 +132,7 @@ export default function StatementEditor() {
     <div className="space-y-8">
       <section aria-labelledby="stmt-upload-heading" className="space-y-3">
         <h2 id="stmt-upload-heading" className="text-xl font-semibold">
-          <StepBadge n={1} /> 명세서 엑셀 올리기
+          <StepBadge n={1} /> 파일 업로드
         </h2>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           온비드 공매재산명세서를 엑셀(.xls, .xlsx)로 올리면 권리를 읽어 줍니다. 파일은 이 브라우저 안에서만 읽고 서버로 보내거나 저장하지 않습니다.
