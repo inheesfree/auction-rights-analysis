@@ -53,7 +53,7 @@ export default function ClaimEditor() {
     <div className="space-y-8">
       <section aria-labelledby="input-heading" className="space-y-3">
         <h2 id="input-heading" className="text-xl font-semibold">
-          <StepBadge n={1} /> 채권자 입력 (직접 입력 · 캡처 이미지)
+          <StepBadge n={1} /> 파일업로드
         </h2>
         <OcrImageReader onRead={handleOcrRead} />
         {ocr ? (
