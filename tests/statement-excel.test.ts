@@ -187,3 +187,41 @@ describe("엑셀 파일 → 칸 글자", () => {
     expect(grids[1].rows[0]).toEqual(["120,000,000", "미상"]);
   });
 });
+
+describe("명세서 엑셀 읽기: 임차인 없이 공공기관이 얽힌 구조(두 번째 서식)", () => {
+  function grids(): SheetGrid[] {
+    const page1 = sheet("Page 1", 22, {
+      5: { A: "공매재산의 표시", F: "업무시설" },
+      6: { A: "공매재산의 표시", F: "서울특별시 영등포구 문래동5가 5-3 금강노블레스 제에이동 제11층" },
+      14: { A: "점유 관계", C: "성명", K: "보증금", N: "차임" },
+      15: { A: "임차인", C: "이 **", K: "3,000,000", N: "1,100,000" },
+      17: { A: "임대차 구분", C: "성명", F: "전입신고일자", I: "확정일자", K: "보증금", M: "차임", T: "배분요구 일자" },
+      20: { A: "번호", B: "권리관계", E: "성명", H: "압류/설정 (등기)일자", J: "법정기일 (납부기한)", P: "설정금액(원)", V: "배분요구 채권액(원)", X: "배분요구일" },
+      21: { A: "1", B: "임차인", E: "임차인", P: "0", V: "0" },
+    });
+    const page2 = sheet("Page 2", 12, {
+      2: { A: "2", B: "임차권", C: "주택도시보증공사", D: "2024-08-19", F: "400,000,000", G: "0" },
+      3: { A: "3", B: "교부청구", C: "서울특별시", E: "2025-09-10 ~ 2025-09-10", F: "0", G: "61,813,300", H: "2026-08-07" },
+      4: { A: "4", B: "가압류", C: "주택도시보증공사", D: "2026-06-19", F: "10,000,000", G: "0" },
+      5: { A: "5", B: "위임기관", C: "주택도시보증공사", D: "2026-07-10", F: "0", G: "20,760,192,273", H: "2026-07-27" },
+      6: { A: "* 채권신고 및 배분요구현황은 배분요구서를 기준으로 작성하였으며" },
+    });
+    return [page1, page2];
+  }
+
+  test("임차인 표가 비어 있으면 임차인을 읽지 않고 이유를 알리며, 이해하지 못한 권리는 건너뛴다", () => {
+    const read = readStatementGrids(grids(), { region: "seoul" });
+    expect(read.claims.some((claim) => claim.kind === "lease")).toBe(false);
+    expect(read.warnings.some((w) => w.includes("Page 1 21행") && w.includes("임차인 내용이 없어"))).toBe(true);
+    expect(read.warnings.some((w) => w.includes("Page 2 2행") && w.includes("임차권"))).toBe(true);
+    expect(read.warnings.some((w) => w.includes("Page 2 5행") && w.includes("위임기관"))).toBe(true);
+    // 읽은 것: 서울특별시 교부청구(지방세), 배분요구 없는 가압류(채권액 0)
+    expect(read.claims.map((claim) => [claim.kind, claim.values.creditor, claim.values.amount])).toEqual([
+      ["tax", "서울특별시", "61813300"],
+      ["provisionalSeizure", "주택도시보증공사", "0"],
+    ]);
+    expect(read.claims[0].values.taxType).toBe("local");
+    expect(read.claims[1].values.requestedDistribution).toBe("");
+    expect(read.isHousing).toBeNull(); // 건물 용도(업무시설)로는 주택인지 알 수 없다. 사용자가 고른다.
+  });
+});

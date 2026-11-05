@@ -139,9 +139,11 @@ function readProperty(grids: readonly SheetGrid[]): { addressText: string | null
     }
   }
   const addressText = texts.find((text) => /[시도]\s/.test(text) && /[동읍면로길]/.test(text)) ?? null;
-  const joined = texts.join(" ");
-  if (HOUSING_WORDS.some((word) => joined.includes(word))) return { addressText, isHousing: true };
-  if (NON_HOUSING_WORDS.some((word) => joined.includes(word))) return { addressText, isHousing: false };
+  // 건물의 용도는 첫 「공매재산의 표시」 줄에 적힌다(예: 공동주택, 업무시설). 뒤의 줄은 주소와 대지·건물 면적이라
+  // "공장용지"처럼 땅의 종류가 적혀 있어도 건물 용도와 무관하므로 보지 않는다.
+  const usage = texts[0] ?? "";
+  if (HOUSING_WORDS.some((word) => usage.includes(word))) return { addressText, isHousing: true };
+  if (NON_HOUSING_WORDS.some((word) => usage.includes(word))) return { addressText, isHousing: false };
   return { addressText, isHousing: null };
 }
 
@@ -152,11 +154,18 @@ function readProperty(grids: readonly SheetGrid[]): { addressText: string | null
 const where = (grid: SheetGrid, rowIndex: number) => `${grid.name} ${rowIndex + 1}행`;
 
 /** 임차인 표(임대차 구분, 성명, 전입신고일자, 확정일자, 보증금 ...)를 읽는다. */
-function readTenants(grids: readonly SheetGrid[], options: ReadOptions, isHousing: boolean | null, warnings: string[]): ReadClaim[] {
+function readTenants(
+  grids: readonly SheetGrid[],
+  options: ReadOptions,
+  isHousing: boolean | null,
+  warnings: string[],
+): { claims: ReadClaim[]; tableFound: boolean } {
   const claims: ReadClaim[] = [];
+  let tableFound = false;
   for (const grid of grids) {
     const headerIndex = grid.rows.findIndex((row) => row.some((cell) => /^임대차\s*구분/.test(clean(cell))) && row.some((cell) => /^보증금/.test(clean(cell))));
     if (headerIndex === -1) continue;
+    tableFound = true;
 
     const column: Record<string, number> = {};
     grid.rows[headerIndex].forEach((cell, index) => {
@@ -193,11 +202,11 @@ function readTenants(grids: readonly SheetGrid[], options: ReadOptions, isHousin
       claims.push({ source: where(grid, r), kind: "lease", values, taxItems: [] });
     }
   }
-  return claims;
+  return { claims, tableFound };
 }
 
 /** 배분요구 및 채권신고 현황 표를 읽는다. 표가 여러 시트에 걸쳐 있으면 이어서 읽는다. */
-function readRights(grids: readonly SheetGrid[], tenantsFound: boolean, warnings: string[]): ReadClaim[] {
+function readRights(grids: readonly SheetGrid[], tenantTableFound: boolean, tenantCount: number, warnings: string[]): ReadClaim[] {
   const claims: ReadClaim[] = [];
   let inTable = false;
 
@@ -238,7 +247,11 @@ function readRights(grids: readonly SheetGrid[], tenantsFound: boolean, warnings
       const requestedAt = tokens.slice(lastAmount + 1).some((t) => t.type === "date");
 
       if (relation.includes("임차인")) {
-        if (!tenantsFound) warnings.push(`${where(grid, rowIndex)}: 임차인 표를 찾지 못해 임차인을 읽지 못했습니다. 직접 입력해 주세요.`);
+        if (!tenantTableFound) {
+          warnings.push(`${where(grid, rowIndex)}: 임차인 표를 찾지 못해 임차인을 읽지 못했습니다. 직접 입력해 주세요.`);
+        } else if (tenantCount === 0) {
+          warnings.push(`${where(grid, rowIndex)}: 「임차인 배분 요구 및 채권신고 현황」 표에 임차인 내용이 없어(배분요구 없음) 임차인은 읽지 않았습니다.`);
+        }
         return;
       }
 
@@ -319,8 +332,8 @@ function readRights(grids: readonly SheetGrid[], tenantsFound: boolean, warnings
 export function readStatementGrids(grids: readonly SheetGrid[], options: ReadOptions = {}): StatementRead {
   const warnings: string[] = [];
   const { addressText, isHousing } = readProperty(grids);
-  const tenants = readTenants(grids, options, isHousing, warnings);
-  const rights = readRights(grids, tenants.length > 0, warnings);
+  const { claims: tenants, tableFound } = readTenants(grids, options, isHousing, warnings);
+  const rights = readRights(grids, tableFound, tenants.length, warnings);
 
   if (tenants.length + rights.length === 0) {
     warnings.push("읽을 수 있는 권리를 찾지 못했습니다. 공매재산명세서 엑셀이 맞는지 확인해 주세요.");
