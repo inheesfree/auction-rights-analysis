@@ -113,7 +113,7 @@ export default function HomeHero() {
       </AnimatePresence>
 
       <section className="relative z-10 mx-auto max-w-[1280px] px-5 sm:px-8" style={{ paddingTop: "clamp(40px, 8vw, 72px)" }}>
-        <div className="max-w-[560px]">
+        <div className="max-w-[820px]">
           <motion.h1
             custom={0}
             variants={fadeUp}
@@ -131,12 +131,16 @@ export default function HomeHero() {
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            style={{ fontSize: "clamp(0.9rem, 2.5vw, 1.1rem)", lineHeight: 1.65, opacity: 0.8, maxWidth: 560, marginBottom: 32 }}
+            style={{ fontSize: "clamp(0.9rem, 2.5vw, 1.1rem)", lineHeight: 1.65, opacity: 0.8, maxWidth: 820, marginBottom: 32 }}
           >
-            공매재산명세서만 업로드하면 부동산의 권리관계를 자동으로 분석해 주는 스마트 공매 권리분석 서비스입니다.
+            공매재산명세서를 업로드하면 부동산의 권리관계를 자동으로 분석해 주는
+            <br />
+            스마트 공매 권리분석 서비스입니다.
             <br />
             <br />
-            공매 물건에 설정된 근저당권, 압류, 가압류, 임차권 등 다양한 권리정보를 분석하고, 권리 간 우선순위와 예상 배분순위를 한눈에 확인할 수 있도록 도와줍니다.
+            공매 물건에 설정된 근저당권, 압류, 가압류, 임차권 등 다양한 권리정보를
+            <br />
+            분석하고, 권리 간 우선순위와 예상 배분순위를 한눈에 확인할 수 있도록 도와줍니다.
           </motion.p>
           <motion.div custom={2} variants={fadeUp} initial="hidden" animate="visible">
             <motion.div whileHover={{ scale: 1.04, filter: "brightness(1.1)" }} whileTap={{ scale: 0.96 }} className="inline-block">
