@@ -4,6 +4,7 @@
 import { compareDates } from "../dates";
 import type { JeonseClaim, LeaseClaim, MortgageClaim, PublicChargeClaim } from "../types";
 import { dateLine, judgedClaim, requireDate, type Judgment } from "./judgment";
+import { leaseBaseDate } from "./lease";
 
 const LAW_HEALTH_INSURANCE = "국민건강보험법 제85조";
 
@@ -48,22 +49,26 @@ export function judgeChargeVsSecured(charge: PublicChargeClaim, secured: Mortgag
 
 /**
  * 규칙 11: 공과금(a)과 확정일자부 주택임차보증금(b)을 비교한다.
- * 우선징수권이 있는 공과금이 날짜와 상관없이 우선한다 (담당자 업무 기준, 법적 근거 미확인).
+ * 공과금 납부기한이 임차인 기준일(전입일·확정일자 중 늦은 날)보다 **빠를 때만** 공과금이 우선하고,
+ * 그렇지 않으면(같은 날 포함) 임차보증금이 우선한다 (담당자 확인, 2026-11-05).
+ * 담당자 업무 기준이며, 국민건강보험법 제85조에는 확정일자 임차권이 명시되어 있지 않아 법적 근거 미확인으로 표시한다.
  * 확정일자가 없는 임차인은 배분을 받지 못하므로 이 규칙으로 판단하지 않는다.
  */
 export function judgeChargeVsLease(charge: PublicChargeClaim, lease: LeaseClaim): Judgment {
-  if (lease.fixedDate === null) {
-    throw new RangeError("확정일자가 없는 임차인은 배분을 받지 못하므로 순위를 비교하지 않습니다.");
-  }
+  const tenantDate = leaseBaseDate(lease);
+  const dueDate = requireDate(charge.dueDate, "공과금 납부기한");
+  const chargeFirst = compareDates(dueDate, tenantDate) < 0;
   return {
     ruleNo: 11,
     ruleName: "공과금 vs 임차보증금",
     a: judgedClaim(charge),
     b: judgedClaim(lease),
-    winner: "a",
-    comparedDates: [],
+    winner: chargeFirst ? "a" : "b",
+    comparedDates: [dateLine("공과금 납부기한", dueDate), dateLine("임차인 기준일(전입일·확정일자 중 늦은 날)", tenantDate)],
     law: LAW_HEALTH_INSURANCE,
     legalBasisUnverified: true,
-    reason: "우선징수권이 있는 공과금은 날짜와 상관없이 확정일자부 임차보증금보다 우선합니다. (담당자 업무 기준, 법적 근거 미확인: 조문에 확정일자 임차권이 명시되어 있지 않음)",
+    reason: chargeFirst
+      ? "공과금 납부기한이 임차인 기준일보다 빨라 공과금이 우선합니다. (담당자 업무 기준, 법적 근거 미확인: 조문에 확정일자 임차권이 명시되어 있지 않음)"
+      : "공과금 납부기한이 임차인 기준일보다 빠르지 않아(늦거나 같은 날) 임차보증금이 우선합니다. (담당자 업무 기준, 법적 근거 미확인)",
   };
 }

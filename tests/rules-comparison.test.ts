@@ -120,11 +120,14 @@ t("규칙 10: 공과금 납부기한 전 담보권은 담보권, 이후는 공�
   j = judgeChargeVsSecured(charge, mortgage("2020-06-01"));
   assert.equal(j.winner, "a");
 });
-t("규칙 11: 공과금은 날짜와 무관하게 임차보증금보다 우선", () => {
-  const charge = mk("publicCharge", { creditor: "건보공단", amount: "5000", dueDate: "2030-01-01" });
-  const j = judgeChargeVsLease(charge, lease("2010-01-01", "2010-01-02"));
-  assert.equal(j.winner, "a"); assert.equal(j.legalBasisUnverified, true); assert.equal(j.comparedDates.length, 0);
-  assert.throws(() => judgeChargeVsLease(charge, lease("2010-01-01", "")), RangeError);
+t("규칙 11: 공과금 납부기한이 임차인 기준일보다 빠를 때만 공과금 우선 (같은 날·늦으면 임차보증금)", () => {
+  const charge = (due: string) => mk("publicCharge", { creditor: "건보공단", amount: "5000", dueDate: due });
+  const l = lease("2021-03-02", "2021-03-10"); // 임차인 기준일 2021-03-10
+  const early = judgeChargeVsLease(charge("2020-06-01"), l);
+  assert.equal(early.winner, "a"); assert.equal(early.legalBasisUnverified, true); assert.equal(early.comparedDates.length, 2);
+  assert.equal(judgeChargeVsLease(charge("2021-03-10"), l).winner, "b"); // 같은 날
+  assert.equal(judgeChargeVsLease(charge("2030-01-01"), l).winner, "b"); // 납부기한이 늦음
+  assert.throws(() => judgeChargeVsLease(charge("2020-06-01"), lease("2010-01-01", "")), RangeError);
 });
 
 // 입력 보완 (확정일자 없는 임차인 안내, 납세담보 필수)
