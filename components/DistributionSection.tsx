@@ -61,9 +61,9 @@ export default function DistributionSection({
 
   return (
     <div className="space-y-8">
-      <section aria-labelledby="sale-heading" className="space-y-3">
+      <section aria-labelledby="sale-heading" className="space-y-4">
         <h2 id="sale-heading" className="text-xl font-semibold">
-          <StepBadge n={4} /> 금액 입력
+          <StepBadge n={3} /> 권리분석 결과
         </h2>
         <fieldset className="flex flex-wrap gap-4 text-sm">
           <legend className="mb-1 font-medium">작업 선택</legend>
@@ -95,77 +95,64 @@ export default function DistributionSection({
             </p>
           ) : null}
         </div>
+
+        {!validation.canCalculate ? (
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">STEP 2의 입력값 검사를 통과해야 계산할 수 있습니다.</p>
+        ) : outcome === null ? (
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">{saleLabel}을 입력하면 결과가 나옵니다.</p>
+        ) : (
+          <ResultBody outcome={outcome} claims={claims} isEntrust={isEntrust} />
+        )}
       </section>
 
-      {!validation.canCalculate ? (
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">STEP 3 입력값 검사를 통과해야 계산할 수 있습니다.</p>
-      ) : outcome === null ? (
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">{saleLabel}을 입력하면 결과가 나옵니다.</p>
-      ) : (
-        <Result outcome={outcome} claims={claims} isEntrust={isEntrust} />
-      )}
+      {outcome !== null && outcome.kind === "result" && outcome.result.ok ? (
+        <section aria-labelledby="evidence-heading" className="space-y-3">
+          <h2 id="evidence-heading" className="text-xl font-semibold">
+            분석 근거
+          </h2>
+          <EvidencePanel evidence={buildEvidence(outcome.result)} />
+        </section>
+      ) : null}
     </div>
   );
 }
 
-function Result({ outcome, claims, isEntrust }: { outcome: Outcome; claims: Claim[]; isEntrust: boolean }) {
+/** 결과 영역: 계산하지 못했거나 다루지 않는 경우의 안내, 또는 배분표와 인수할 보증금. */
+function ResultBody({ outcome, claims, isEntrust }: { outcome: Outcome; claims: Claim[]; isEntrust: boolean }) {
   if (outcome.kind === "error") {
     return (
-      <section aria-labelledby="result-heading" className="space-y-3">
-        <h2 id="result-heading" className="text-xl font-semibold">
-          <StepBadge n={5} /> 결과
-        </h2>
-        <p role="alert" className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-900 dark:border-red-700 dark:bg-red-950 dark:text-red-200">
-          계산하지 못했습니다: {outcome.message}
-        </p>
-      </section>
+      <p role="alert" className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-900 dark:border-red-700 dark:bg-red-950 dark:text-red-200">
+        계산하지 못했습니다: {outcome.message}
+      </p>
     );
   }
 
   const result = outcome.result;
   if (!result.ok) {
     return (
-      <section aria-labelledby="result-heading" className="space-y-3">
-        <h2 id="result-heading" className="text-xl font-semibold">
-          <StepBadge n={5} /> 결과
-        </h2>
-        <div role="alert" className="space-y-2 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200">
-          <p className="font-semibold">{STOP_TITLES[result.reason]}</p>
-          <ul className="list-disc space-y-1 pl-5">
-            {result.messages.map((message, index) => (
-              <li key={index}>{message}</li>
-            ))}
-          </ul>
-          <p>이 경우는 이 앱이 계산하지 않습니다. 담당자가 별도로 처리해 주세요.</p>
-        </div>
-      </section>
+      <div role="alert" className="space-y-2 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200">
+        <p className="font-semibold">{STOP_TITLES[result.reason]}</p>
+        <ul className="list-disc space-y-1 pl-5">
+          {result.messages.map((message, index) => (
+            <li key={index}>{message}</li>
+          ))}
+        </ul>
+        <p>이 경우는 이 앱이 계산하지 않습니다. 담당자가 별도로 처리해 주세요.</p>
+      </div>
     );
   }
 
-  const evidence = buildEvidence(result);
   const entrusted = claims.filter((claim) => claim.isEntrusted);
 
   return (
-    <>
-      <section aria-labelledby="result-heading" className="space-y-4">
-        <h2 id="result-heading" className="text-xl font-semibold">
-          <StepBadge n={5} /> 결과
-        </h2>
-        {isEntrust ? <Recovery entrusted={entrusted} paidByClaim={result.paidByClaim} /> : null}
-        <DistributionTable result={result} />
-        <AcquiredDepositBox deposits={result.acquiredDeposits} />
-        <p className="rounded border border-zinc-200 bg-zinc-50 p-3 text-sm dark:border-zinc-800 dark:bg-zinc-900">
-          참고용이며 법적 효력이 없습니다.
-        </p>
-      </section>
-
-      <section aria-labelledby="evidence-heading" className="space-y-3">
-        <h2 id="evidence-heading" className="text-xl font-semibold">
-          <StepBadge n={6} /> 분석 근거
-        </h2>
-        <EvidencePanel evidence={evidence} />
-      </section>
-    </>
+    <div className="space-y-4">
+      {isEntrust ? <Recovery entrusted={entrusted} paidByClaim={result.paidByClaim} /> : null}
+      <DistributionTable result={result} />
+      <AcquiredDepositBox deposits={result.acquiredDeposits} />
+      <p className="rounded border border-zinc-200 bg-zinc-50 p-3 text-sm dark:border-zinc-800 dark:bg-zinc-900">
+        참고용이며 법적 효력이 없습니다.
+      </p>
+    </div>
   );
 }
 

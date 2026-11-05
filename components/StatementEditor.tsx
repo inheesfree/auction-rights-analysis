@@ -51,13 +51,16 @@ export default function StatementEditor() {
   const [reading, setReading] = useState(false);
   /** 엑셀에서 읽은 값을 사용자가 아직 확인하지 않았으면 `true`. 확인하기 전에는 분석하지 않는다. */
   const [pendingConfirm, setPendingConfirm] = useState(false);
+  /** 「권리분석 시작」을 누른 시점의 채권 목록. 채권이 하나라도 바뀌면(목록이 새로 만들어지면) 결과를 다시 숨긴다. */
+  const [startedClaims, setStartedClaims] = useState<Claim[] | null>(null);
+  const started = startedClaims === claims;
 
   const validation = validateClaims(claims);
   // 화면에는 이름을 가린 채권을 보여준다. 입력한 원래 값은 이 화면 안에만 있고 서버로 보내거나 저장하지 않는다.
   const shown = useMemo(() => claims.map(maskClaim), [claims]);
   const outcome = useMemo<Outcome | null>(
-    () => (validation.canCalculate && !pendingConfirm ? analyze(claims) : null),
-    [validation.canCalculate, pendingConfirm, claims],
+    () => (validation.canCalculate && started && !pendingConfirm ? analyze(claims) : null),
+    [validation.canCalculate, started, pendingConfirm, claims],
   );
 
   /** 칸 글자에서 권리를 읽어 화면의 채권 목록(엑셀에서 읽은 것)을 바꾼다. 직접 입력한 채권은 그대로 둔다. */
@@ -109,6 +112,13 @@ export default function StatementEditor() {
   const changeHousing = (next: "" | "yes" | "no") => {
     setHousing(next);
     if (grids) applyGrids(grids, optionsFor(region, next));
+  };
+
+  /** 「권리분석 시작」: 읽은 값을 확인한 것으로 보고 분석을 시작한 뒤 결과 구역으로 이동한다. */
+  const startAnalysis = () => {
+    setPendingConfirm(false);
+    setStartedClaims(claims);
+    setTimeout(() => document.querySelector("#stmt-rank-heading, #stmt-stop-heading")?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
   };
 
   const handleAdd = (kind: RightKind, values: FormValues, taxItems: FormValues[]) => {
@@ -208,7 +218,7 @@ export default function StatementEditor() {
 
       <section aria-labelledby="stmt-table-heading" className="space-y-3">
         <h2 id="stmt-table-heading" className="text-xl font-semibold">
-          <StepBadge n={2} /> 권리분석 결과
+          <StepBadge n={2} /> 입력 내용 확인
         </h2>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           이름은 개인정보 보호를 위해 가려서 보여줍니다. 읽지 못한 값은 추측해서 채우지 않고 빈칸으로 둡니다. 「원본 위치」는 엑셀의 시트와 행입니다.
@@ -229,27 +239,30 @@ export default function StatementEditor() {
         {pendingConfirm ? (
           <div role="alert" className="space-y-2 rounded border border-sky-300 bg-sky-50 p-3 text-sm text-sky-900 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-200">
             <p>
-              엑셀에서 읽은 값입니다. 위 표를 원본 명세서와 맞춰 보고, 임차인의 전입일자·확정일자는 줄의 「날짜 입력」으로 바로 고칠 수 있고, 틀리거나 빠진 다른 권리는 삭제한 뒤 아래 직접 입력으로 다시 넣어 주세요. 확인하기 전에는 분석하지 않습니다.
+              엑셀에서 읽은 값입니다. 위 표를 원본 명세서와 맞춰 보고, 임차인의 전입일자·확정일자는 줄의 「날짜 입력」으로 바로 고칠 수 있고, 틀리거나 빠진 다른 권리는 삭제한 뒤 아래 직접 입력으로 다시 넣어 주세요. 아래 「권리분석 시작」을 누르기 전에는 분석하지 않습니다.
             </p>
+          </div>
+        ) : null}
+        {claims.length > 0 ? (
+          <div className="space-y-2 pt-2">
+            <h3 className="font-semibold">입력값 검사</h3>
+            <ValidationPanel result={validation} successMessage="입력에 문제가 없습니다. 「권리분석 시작」을 누르면 아래에 권리 순위가 나옵니다." />
+          </div>
+        ) : null}
+        {claims.length > 0 ? (
+          <div className="pt-2">
             <button
               type="button"
-              onClick={() => setPendingConfirm(false)}
-              className="rounded bg-black px-4 py-2 font-medium text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+              onClick={startAnalysis}
+              disabled={!validation.canCalculate}
+              className="rounded bg-black px-6 py-3 font-semibold text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              확인 완료
+              권리분석 시작
             </button>
+            {!validation.canCalculate ? <p className="mt-2 text-sm text-zinc-600">입력값 검사를 통과해야 시작할 수 있습니다.</p> : null}
           </div>
         ) : null}
       </section>
-
-      {claims.length > 0 ? (
-        <section aria-labelledby="stmt-validation-heading" className="space-y-3">
-          <h2 id="stmt-validation-heading" className="text-xl font-semibold">
-            <StepBadge n={3} /> 입력값 검사
-          </h2>
-          <ValidationPanel result={validation} successMessage="입력에 문제가 없습니다. 읽은 값을 확인하면 아래에 권리 순위가 나옵니다." />
-        </section>
-      ) : null}
 
       {outcome === null ? null : outcome.kind === "error" ? (
         <p role="alert" className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-900 dark:border-red-700 dark:bg-red-950 dark:text-red-200">
@@ -258,7 +271,7 @@ export default function StatementEditor() {
       ) : !outcome.analysis.ok ? (
         <section aria-labelledby="stmt-stop-heading" className="space-y-2">
           <h2 id="stmt-stop-heading" className="text-xl font-semibold">
-            <StepBadge n={4} /> 권리 순위
+            <StepBadge n={3} /> 권리분석 결과
           </h2>
           <div role="alert" className="space-y-2 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200">
             <p className="font-semibold">이 앱이 분석하지 않는 경우</p>
@@ -273,7 +286,7 @@ export default function StatementEditor() {
         <>
           <section aria-labelledby="stmt-rank-heading" className="space-y-3">
             <h2 id="stmt-rank-heading" className="text-xl font-semibold">
-              <StepBadge n={4} /> 권리 순위
+              <StepBadge n={3} /> 권리분석 결과
             </h2>
             <StatementRanking analysis={outcome.analysis} />
             <ul className="space-y-1 text-sm text-zinc-600 dark:text-zinc-400">
@@ -285,7 +298,7 @@ export default function StatementEditor() {
 
           <section aria-labelledby="stmt-evidence-heading" className="space-y-3">
             <h2 id="stmt-evidence-heading" className="text-xl font-semibold">
-              <StepBadge n={5} /> 분석 근거
+              분석 근거
             </h2>
             <EvidencePanel
               evidence={{

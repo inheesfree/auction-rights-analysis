@@ -17,7 +17,15 @@ export default function ClaimEditor() {
   const [claims, setClaims] = useState<Claim[]>([]);
   const [notice, setNotice] = useState<string[]>([]);
   const nextId = useRef(1);
+  /** 「권리분석 시작」을 누른 시점의 채권 목록. 채권이 바뀌면(목록이 새로 만들어지면) 결과를 다시 숨긴다. */
+  const [startedClaims, setStartedClaims] = useState<Claim[] | null>(null);
+  const started = startedClaims === claims;
   const validation = validateClaims(claims);
+
+  const startAnalysis = () => {
+    setStartedClaims(claims);
+    setTimeout(() => document.querySelector("#sale-heading")?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+  };
 
   const handleAdd = (
     kind: RightKind,
@@ -47,26 +55,35 @@ export default function ClaimEditor() {
 
       <section aria-labelledby="table-heading" className="space-y-3">
         <h2 id="table-heading" className="text-xl font-semibold">
-          <StepBadge n={2} /> 권리분석 결과
+          <StepBadge n={2} /> 입력 내용 확인
         </h2>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           빈칸은 <span className="rounded bg-red-100 px-1.5 py-0.5 font-medium text-red-700 dark:bg-red-950 dark:text-red-300">(빈칸)</span>
           으로 붉게 표시됩니다. 추측해서 채우지 않습니다.
         </p>
         <ClaimTable claims={claims} onRemove={(id) => setClaims((prev) => prev.filter((c) => c.id !== id))} />
+        {claims.length > 0 ? (
+          <>
+            <div className="space-y-2 pt-2">
+              <h3 className="font-semibold">입력값 검사</h3>
+              <ValidationPanel result={validation} />
+            </div>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={startAnalysis}
+                disabled={!validation.canCalculate}
+                className="rounded bg-black px-6 py-3 font-semibold text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                권리분석 시작
+              </button>
+              {!validation.canCalculate ? <p className="mt-2 text-sm text-zinc-600">입력값 검사를 통과해야 시작할 수 있습니다.</p> : null}
+            </div>
+          </>
+        ) : null}
       </section>
 
-      {claims.length > 0 ? (
-        <>
-          <section aria-labelledby="validation-heading" className="space-y-3">
-            <h2 id="validation-heading" className="text-xl font-semibold">
-              <StepBadge n={3} /> 입력값 검사
-            </h2>
-            <ValidationPanel result={validation} />
-          </section>
-          <DistributionSection claims={claims} validation={validation} />
-        </>
-      ) : null}
+      {claims.length > 0 && started ? <DistributionSection claims={claims} validation={validation} /> : null}
     </div>
   );
 }
