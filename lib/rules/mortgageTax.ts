@@ -14,7 +14,7 @@ import {
 
 /**
  * 근저당권(a)과 일반 조세(b)를 비교한다. 조세가 국세면 규칙 1, 지방세면 규칙 2다.
- * 비교하는 날짜: 조세 세목의 법정기일 ↔ 근저당권 등기 접수일.
+ * 비교하는 날짜: 조세 세목의 법정기일 ↔ 근저당권 설정일자.
  * 당해세는 날짜와 상관없이 우선하므로 이 규칙으로 판단하지 않는다 (규칙 3, 작업 6).
  */
 export function judgeMortgageVsTax(mortgage: MortgageClaim, tax: TaxPart): Judgment {
@@ -25,14 +25,14 @@ export function judgeMortgageVsTax(mortgage: MortgageClaim, tax: TaxPart): Judgm
   if (taxType === null) throw new RangeError("국세/지방세 구분이 없어 규칙을 고를 수 없습니다.");
 
   const national = taxType === "national";
-  const mortgageDate = requireDate(mortgage.registrationDate, "근저당권 등기 접수일");
+  const mortgageDate = requireDate(mortgage.registrationDate, "근저당권 설정일자");
   const legalDueDate = requireDate(tax.item.legalDueDate, "법정기일");
   const order = compareDates(legalDueDate, mortgageDate);
 
   const taxName = national ? "국세" : "지방세";
   const comparedDates = [
     dateLine(`${taxName} 법정기일`, legalDueDate),
-    dateLine("근저당권 등기 접수일", mortgageDate),
+    dateLine("근저당권 설정일자", mortgageDate),
   ];
   const base = {
     ruleNo: national ? 1 : 2,

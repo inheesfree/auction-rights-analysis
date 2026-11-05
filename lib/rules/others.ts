@@ -56,22 +56,22 @@ export function judgeDangHaeSeAmongTaxes(a: TaxPart, b: TaxPart): Judgment {
   };
 }
 
-/** 근저당권끼리: 등기 접수일이 빠른 쪽이 우선. 같은 날이면 등기 접수번호가 앞선 쪽 (담당자 확인). */
+/** 근저당권끼리: 설정일자가 빠른 쪽이 우선. 같은 날이면 등기 접수번호가 앞선 쪽 (담당자 확인). */
 export function judgeMortgageVsMortgage(a: MortgageClaim, b: MortgageClaim): Judgment {
-  const dateA = requireDate(a.registrationDate, "근저당권 등기 접수일");
-  const dateB = requireDate(b.registrationDate, "근저당권 등기 접수일");
+  const dateA = requireDate(a.registrationDate, "근저당권 설정일자");
+  const dateB = requireDate(b.registrationDate, "근저당권 설정일자");
   const order = compareDates(dateA, dateB);
   const base = {
     ruleNo: null,
     ruleName: "근저당권 상호간 (등기 순서)",
     a: judgedClaim(a),
     b: judgedClaim(b),
-    comparedDates: [dateLine("첫째 근저당권 등기 접수일", dateA), dateLine("둘째 근저당권 등기 접수일", dateB)],
+    comparedDates: [dateLine("첫째 근저당권 설정일자", dateA), dateLine("둘째 근저당권 설정일자", dateB)],
     law: null,
     legalBasisUnverified: false,
   };
   if (order !== 0) {
-    return { ...base, winner: order < 0 ? "a" : "b", reason: "등기 접수일이 빠른 근저당권이 우선합니다." };
+    return { ...base, winner: order < 0 ? "a" : "b", reason: "설정일자가 빠른 근저당권이 우선합니다." };
   }
   const numberA = a.registrationNumber;
   const numberB = b.registrationNumber;
@@ -81,14 +81,14 @@ export function judgeMortgageVsMortgage(a: MortgageClaim, b: MortgageClaim): Jud
       return {
         ...base,
         winner: byNumber < 0 ? "a" : "b",
-        reason: `등기 접수일이 같아 등기 접수번호가 앞선 근저당권이 우선합니다. (${numberA} / ${numberB})`,
+        reason: `설정일자가 같아 등기 접수번호가 앞선 근저당권이 우선합니다. (${numberA} / ${numberB})`,
       };
     }
   }
   return {
     ...base,
     winner: "undetermined",
-    reason: "근저당권 두 건의 등기 접수일이 같고 접수번호로도 선후를 가릴 수 없습니다. 이 경우는 이 앱이 판단하지 않습니다.",
+    reason: "근저당권 두 건의 설정일자가 같고 접수번호로도 선후를 가릴 수 없습니다. 이 경우는 이 앱이 판단하지 않습니다.",
   };
 }
 

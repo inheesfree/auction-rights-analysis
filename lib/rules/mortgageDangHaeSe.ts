@@ -18,7 +18,7 @@ export function judgeMortgageVsDangHaeSe(mortgage: MortgageClaim, tax: TaxPart):
   if (taxType === null) throw new RangeError("국세/지방세 구분이 없어 규칙을 고를 수 없습니다.");
 
   const national = taxType === "national";
-  const mortgageDate = requireDate(mortgage.registrationDate, "근저당권 등기 접수일");
+  const mortgageDate = requireDate(mortgage.registrationDate, "근저당권 설정일자");
   const legalDueDate = requireDate(tax.item.legalDueDate, "법정기일");
 
   return {
@@ -30,7 +30,7 @@ export function judgeMortgageVsDangHaeSe(mortgage: MortgageClaim, tax: TaxPart):
     // 날짜는 결과에 영향을 주지 않지만 근거를 보여주기 위해 함께 남긴다.
     comparedDates: [
       dateLine(`${national ? "국세" : "지방세"} 법정기일`, legalDueDate),
-      dateLine("근저당권 등기 접수일", mortgageDate),
+      dateLine("근저당권 설정일자", mortgageDate),
     ],
     law: national ? "국세기본법 제35조 제3항" : "지방세기본법 제71조 (제5항: 당해세인 재산세 등의 범위)",
     legalBasisUnverified: false,

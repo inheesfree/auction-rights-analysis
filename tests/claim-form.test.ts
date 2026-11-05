@@ -19,7 +19,7 @@ t("읽지 못한 값은 추측 없이 빈칸 + 알림", () => {
     { creditor: "A", amount: "2억", registrationDate: "2020-02-30" }, [], false);
   assert.equal(claim.amount, null);
   assert.equal((claim as any).registrationDate, null);
-  assert.deepEqual(unreadable, ["채권액", "등기 접수일"]);
+  assert.deepEqual(unreadable, ["채권액", "설정일자"]);
 });
 t("안 쓴 칸은 빈칸(알림 없음)", () => {
   const { claim, unreadable } = buildClaim("c3", "mortgage", {}, [], false);

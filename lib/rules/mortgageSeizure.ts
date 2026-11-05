@@ -17,7 +17,7 @@ import { dateLine, judgedClaim, requireDate, type Judgment } from "./judgment";
  * - 같은 날: 담당자 확인 전이라 판단하지 않음
  */
 export function judgeMortgageVsProvisional(mortgage: MortgageClaim, seizure: ProvisionalSeizureClaim): Judgment {
-  const mortgageDate = requireDate(mortgage.registrationDate, "근저당권 등기 접수일");
+  const mortgageDate = requireDate(mortgage.registrationDate, "근저당권 설정일자");
   const seizureDate = requireDate(seizure.registrationDate, "가압류 등기일");
   const order = compareDates(mortgageDate, seizureDate);
 
@@ -26,7 +26,7 @@ export function judgeMortgageVsProvisional(mortgage: MortgageClaim, seizure: Pro
     ruleName: "근저당권 vs 가압류",
     a: judgedClaim(mortgage),
     b: judgedClaim(seizure),
-    comparedDates: [dateLine("근저당권 등기 접수일", mortgageDate), dateLine("가압류 등기일", seizureDate)],
+    comparedDates: [dateLine("근저당권 설정일자", mortgageDate), dateLine("가압류 등기일", seizureDate)],
     law: null,
     legalBasisUnverified: true,
   };

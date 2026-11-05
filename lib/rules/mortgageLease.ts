@@ -15,7 +15,7 @@ import { dateLine, judgedClaim, requireDate, type Judgment } from "./judgment";
  * 확정일자가 없는 임차인은 배분을 받지 못하므로 이 규칙으로 판단하지 않는다.
  */
 export function judgeMortgageVsLease(mortgage: MortgageClaim, lease: LeaseClaim): Judgment {
-  const mortgageDate = requireDate(mortgage.registrationDate, "근저당권 등기 접수일");
+  const mortgageDate = requireDate(mortgage.registrationDate, "근저당권 설정일자");
   const moveInDate = requireDate(lease.moveInDate, "전입일");
   if (lease.fixedDate === null) {
     throw new RangeError("확정일자가 없는 임차인은 배분을 받지 못하므로 순위를 비교하지 않습니다.");
@@ -31,7 +31,7 @@ export function judgeMortgageVsLease(mortgage: MortgageClaim, lease: LeaseClaim)
     a: judgedClaim(mortgage),
     b: judgedClaim(lease),
     comparedDates: [
-      dateLine("근저당권 등기 접수일", mortgageDate),
+      dateLine("근저당권 설정일자", mortgageDate),
       dateLine("임차인 전입일", moveInDate),
       dateLine("임차인 확정일자", fixedDate),
     ],

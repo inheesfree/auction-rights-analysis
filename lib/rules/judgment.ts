@@ -30,7 +30,7 @@ export interface Judgment {
   a: JudgedClaim;
   b: JudgedClaim;
   winner: Winner;
-  /** 비교한 기준일을 사람이 읽는 글로 적은 것. 예: "근저당권 등기 접수일 2020년 1월 10일" */
+  /** 비교한 기준일을 사람이 읽는 글로 적은 것. 예: "근저당권 설정일자 2020년 1월 10일" */
   comparedDates: string[];
   /** 적용한 법령 조문. 없으면 `null`. */
   law: string | null;
@@ -74,7 +74,7 @@ export function requireDate(date: Blank<DateString>, label: string): DateString 
   return date;
 }
 
-/** 비교한 기준일을 한 줄로 적는다. 예: "근저당권 등기 접수일 2020년 1월 10일" */
+/** 비교한 기준일을 한 줄로 적는다. 예: "근저당권 설정일자 2020년 1월 10일" */
 export function dateLine(label: string, date: DateString): string {
   return `${label} ${formatDate(date)}`;
 }

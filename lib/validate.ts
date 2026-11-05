@@ -66,7 +66,7 @@ function validateClaim(claim: Claim): Issue[] {
 
   switch (claim.kind) {
     case "mortgage":
-      need(claim.registrationDate, "등기 접수일");
+      need(claim.registrationDate, "설정일자");
       break;
     case "jeonse":
       need(claim.isHousing, "주택 여부");

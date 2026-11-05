@@ -92,7 +92,7 @@ interface ClaimBase {
 /** 근저당권. */
 export interface MortgageClaim extends ClaimBase {
   kind: "mortgage";
-  /** 등기 접수일 (기준일). */
+  /** 설정일자 (기준일). */
   registrationDate: Blank<DateString>;
   /** 등기 접수번호 (같은 날짜일 때 선후 판단). */
   registrationNumber: Blank<string>;

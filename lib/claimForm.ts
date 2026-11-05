@@ -62,7 +62,10 @@ const REGISTRATION_FIELDS: FieldDef[] = [
 
 /** 권리 종류별로 추가로 받는 칸 (DESIGN 3.2 표). 조세의 세목은 아래 `TAX_ITEM_FIELDS`로 따로 받는다. */
 export const KIND_FIELDS: Record<SupportedRightKind, FieldDef[]> = {
-  mortgage: REGISTRATION_FIELDS,
+  mortgage: [
+    { key: "registrationDate", label: "설정일자", type: "date", hint: "예: 2020-01-10" },
+    { key: "registrationNumber", label: "등기 접수번호", type: "text", hint: "같은 날짜일 때 선후를 가립니다" },
+  ],
   jeonse: [...REGISTRATION_FIELDS, { key: "isHousing", label: "주택 여부", type: "yesNo" }],
   lease: [
     { key: "moveInDate", label: "전입일", type: "date", hint: "예: 2021-03-02" },
@@ -201,7 +204,7 @@ export function buildClaim(
       claim = {
         ...base,
         kind,
-        registrationDate: toDate(values.registrationDate, "등기 접수일", bad),
+        registrationDate: toDate(values.registrationDate, "설정일자", bad),
         registrationNumber: toText(values.registrationNumber),
       };
       break;
@@ -334,7 +337,7 @@ export function toClaimRow(claim: Claim): ClaimRow {
   switch (claim.kind) {
     case "mortgage":
     case "provisionalSeizure":
-      row.baseDates = [dateCell(claim.kind === "mortgage" ? "접수일" : "등기일", claim.registrationDate)];
+      row.baseDates = [dateCell(claim.kind === "mortgage" ? "설정일자" : "등기일", claim.registrationDate)];
       row.registrationNumber = claim.registrationNumber === null
         ? { text: BLANK, blank: true }
         : { text: claim.registrationNumber, blank: false };
