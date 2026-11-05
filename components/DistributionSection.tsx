@@ -9,6 +9,7 @@
 import { useId, useMemo, useState } from "react";
 import DistributionTable from "@/components/DistributionTable";
 import EvidencePanel from "@/components/EvidencePanel";
+import type { AcquiredDeposit } from "@/lib/acquire";
 import { claimLabel } from "@/lib/claimLabel";
 import { distribute, type DistributionResult } from "@/lib/distribute";
 import { buildEvidence } from "@/lib/evidence";
@@ -151,6 +152,7 @@ function Result({ outcome, claims, isEntrust }: { outcome: Outcome; claims: Clai
         </h2>
         {isEntrust ? <Recovery entrusted={entrusted} paidByClaim={result.paidByClaim} /> : null}
         <DistributionTable result={result} />
+        <AcquiredDepositBox deposits={result.acquiredDeposits} />
         <p className="rounded border border-zinc-200 bg-zinc-50 p-3 text-sm dark:border-zinc-800 dark:bg-zinc-900">
           참고용이며 법적 효력이 없습니다.
         </p>
@@ -163,6 +165,25 @@ function Result({ outcome, claims, isEntrust }: { outcome: Outcome; claims: Clai
         <EvidencePanel evidence={evidence} />
       </section>
     </>
+  );
+}
+
+/** 대항력 있는 임차인(전입일자·확정일자가 모두 있음)의 보증금 중 배분받지 못해 매수인이 인수할 금액. */
+function AcquiredDepositBox({ deposits }: { deposits: AcquiredDeposit[] }) {
+  if (deposits.length === 0) return null;
+  return (
+    <div className="space-y-2 rounded border border-sky-300 bg-sky-50 p-4 text-sm text-sky-900 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-200">
+      <p className="font-medium">매수인이 인수할 임차보증금 (대항력 있는 임차인)</p>
+      <ul className="space-y-1">
+        {deposits.map((d) => (
+          <li key={d.claimId}>
+            {d.label}: 보증금 {formatWon(d.deposit)} − 배분 {formatWon(d.paid)} ={" "}
+            <span className="text-lg font-bold">{formatWon(d.acquired)}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="text-xs">전입일자와 확정일자가 모두 있는 임차인을 대항력 있는 임차인으로 봅니다. (담당자 기준)</p>
+    </div>
   );
 }
 

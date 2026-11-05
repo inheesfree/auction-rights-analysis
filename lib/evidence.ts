@@ -134,6 +134,16 @@ export function buildEvidence(result: OkResult): Evidence {
     });
   }
 
+  if (result.acquiredDeposits.length > 0) {
+    steps.push({
+      title: "매수인이 인수할 임차보증금 (대항력 있는 임차인)",
+      items: result.acquiredDeposits.map((d) => ({
+        text: `${d.label}: 보증금 ${formatWon(d.deposit)} − 배분 ${formatWon(d.paid)} = 인수 ${formatWon(d.acquired)}`,
+        notes: ["전입일자와 확정일자가 모두 있어 대항력 있는 임차인으로 봅니다. (담당자 기준)"],
+      })),
+    });
+  }
+
   if (result.excluded.length > 0) {
     steps.push({
       title: "순위 단계에서 배분하지 않은 채권",

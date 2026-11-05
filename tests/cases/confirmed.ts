@@ -11,16 +11,18 @@ export interface CaseItem {
   /** 표에 적힌 채권자(이름이 없으면 채권 종류). */
   who: string;
   claim: Claim;
-  /** 담당자가 확인한 배분액 (조세는 청구서 한 건의 합계). */
-  paid: number;
+  /** 담당자가 확인한 배분액 (조세는 청구서 한 건의 합계). 담당자가 확인하지 않은 값은 `null`이라 비교하지 않는다. */
+  paid: number | null;
 }
 
 export interface ConfirmedCase {
   name: string;
   saleProceeds: number;
   items: CaseItem[];
-  /** 모든 채권에 배분하고 남은 금액. */
-  leftover: number;
+  /** 모든 채권에 배분하고 남은 금액. 담당자가 확인하지 않았으면 `null`. */
+  leftover: number | null;
+  /** 담당자가 확인한 "매수인이 인수할 임차보증금" (채권자 → 금액). */
+  acquired?: { who: string; amount: number }[];
   /** 표에 없어서 가정한 값. */
   assumptions: string[];
 }
@@ -114,6 +116,25 @@ export const CONFIRMED_CASES: ConfirmedCase[] = [
         paid: 22_000_000,
       },
       { who: "관악세무서", claim: tax("관악세무서", "national", "30000000", "2017-10-06", { seizureDate: "2018-03-01" }), paid: 243_038 },
+    ],
+  },
+  {
+    name: "사례 5: 소액임차 한도와 대항력 있는 임차인의 인수할 임차보증금",
+    saleProceeds: 25_000_000,
+    // 담당자가 확인한 것은 '매수인이 인수할 임차보증금 43,500,000원'(= 보증금 − 임차인 배분액)뿐이다.
+    // 그래서 임차인 배분액 22,000,000원(= 65,500,000 − 43,500,000)만 정답으로 두고, 나머지 배분액은 비교하지 않는다.
+    leftover: null,
+    acquired: [{ who: "홍길동", amount: 43_500_000 }],
+    assumptions: ["임차인 소재지는 서울로 가정 (보증금 6,550만원은 서울 2016년 소액 기준 1억원 이하)", "세목 이름이 표에 없음", "임차인 외 배분액은 담당자 확인 전이라 비교하지 않음"],
+    items: [
+      { who: "한국자산관리공사", claim: claim("dispositionCost", { creditor: "한국자산관리공사", amount: "1000000" }), paid: null },
+      { who: "양천세무서", claim: tax("양천세무서", "national", "2000000", "2010-05-05", { seizureDate: "2015-02-05" }), paid: null },
+      {
+        who: "홍길동",
+        claim: claim("lease", { creditor: "홍길동", amount: "65500000", moveInDate: "2016-10-05", fixedDate: "2016-10-05", isHousing: "yes", region: "seoul" }),
+        paid: 22_000_000,
+      },
+      { who: "관악세무서", claim: tax("관악세무서", "national", "30000000", "2017-10-06", { seizureDate: "2018-03-01" }), paid: null },
     ],
   },
 ];

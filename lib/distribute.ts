@@ -23,6 +23,7 @@ import {
   type CircularAllocation,
   type CycleMember,
 } from "./circular";
+import { acquiredDeposits, type AcquiredDeposit } from "./acquire";
 import { assertWon, formatWon, sumWon } from "./money";
 import { prorate } from "./prorate";
 import { applyRule5, type Rule5Transfer } from "./rule5";
@@ -66,6 +67,8 @@ export type DistributionResult =
       rule5Transfers: Rule5Transfer[];
       /** 순환 배분(공과금·임차보증금·조세) 계산 내역. 순환이 없으면 빈 목록. */
       circular: CircularAllocation[];
+      /** 대항력 있는 임차인(전입일자·확정일자가 모두 있음)이 배분받지 못해 매수인이 인수할 임차보증금. */
+      acquiredDeposits: AcquiredDeposit[];
       /** 모든 순위 판단과 근거. */
       judgments: Judgment[];
       /** 모든 채권에 배분하고 남은 금액. */
@@ -398,6 +401,7 @@ export function distribute(saleProceeds: Won, claims: readonly Claim[]): Distrib
     excluded,
     rule5Transfers: adjusted.transfers,
     circular,
+    acquiredDeposits: acquiredDeposits(claims, paidByClaim),
     judgments,
     leftover: remaining,
     paidByClaim,
