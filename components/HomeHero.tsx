@@ -119,7 +119,7 @@ export default function HomeHero() {
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            style={{ fontFamily: "var(--font-heading)", fontSize: "clamp(1.65rem, 5vw, 3rem)", lineHeight: 1.2, letterSpacing: "-0.01em", color: "#192837", marginBottom: 24 }}
+            style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "clamp(1.65rem, 5vw, 3rem)", lineHeight: 1.2, letterSpacing: "-0.01em", color: "#192837", marginBottom: 24 }}
           >
             <Zap size={24} className="relative mx-1 inline align-middle" style={{ top: -2 }} aria-hidden="true" />
             손 쉬운 공매
