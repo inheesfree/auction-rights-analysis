@@ -208,7 +208,7 @@ export default function StatementEditor() {
 
       <section aria-labelledby="stmt-table-heading" className="space-y-3">
         <h2 id="stmt-table-heading" className="text-xl font-semibold">
-          <StepBadge n={2} /> 읽은 내용 확인
+          <StepBadge n={2} /> 권리분석 결과
         </h2>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           이름은 개인정보 보호를 위해 가려서 보여줍니다. 읽지 못한 값은 추측해서 채우지 않고 빈칸으로 둡니다. 「원본 위치」는 엑셀의 시트와 행입니다.

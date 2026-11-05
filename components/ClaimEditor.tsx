@@ -47,7 +47,7 @@ export default function ClaimEditor() {
 
       <section aria-labelledby="table-heading" className="space-y-3">
         <h2 id="table-heading" className="text-xl font-semibold">
-          <StepBadge n={2} /> 입력한 내용 확인
+          <StepBadge n={2} /> 권리분석 결과
         </h2>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           빈칸은 <span className="rounded bg-red-100 px-1.5 py-0.5 font-medium text-red-700 dark:bg-red-950 dark:text-red-300">(빈칸)</span>
