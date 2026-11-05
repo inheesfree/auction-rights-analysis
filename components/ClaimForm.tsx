@@ -13,6 +13,7 @@ import {
   type FormValues,
 } from "@/lib/claimForm";
 import { autoFormatDateInput } from "@/lib/dates";
+import { autoFormatWonInput } from "@/lib/money";
 import { LEASE_REGIONS, LEASE_REGION_LABELS, RIGHT_KIND_LABELS, type RightKind } from "@/lib/types";
 
 const INPUT_CLASS =
@@ -80,7 +81,11 @@ function FieldInput({
           value={value}
           inputMode={def.type === "won" ? "numeric" : undefined}
           placeholder={def.hint}
-          onChange={(e) => onChange(def.type === "date" ? autoFormatDateInput(e.target.value) : e.target.value)}
+          onChange={(e) =>
+            onChange(
+              def.type === "date" ? autoFormatDateInput(e.target.value) : def.type === "won" ? autoFormatWonInput(e.target.value) : e.target.value,
+            )
+          }
         />
       );
   }
@@ -95,6 +100,13 @@ function FieldInput({
   );
 }
 
+/** 처음에 채워 둔 금액 칸(OCR로 읽은 값 등)에도 1000단위 쉼표를 넣어 보여 준다. */
+function withWonCommas(values: FormValues): FormValues {
+  const out: FormValues = { ...values };
+  for (const key of ["amount", "monthlyRent"]) if (key in out) out[key] = autoFormatWonInput(out[key]);
+  return out;
+}
+
 interface ClaimFormProps {
   /** 「채권 추가」를 누르면 입력 글자를 부모에게 넘긴다. 채권으로 바꾸는 일은 부모(ClaimEditor)가 한다. */
   onAdd: (kind: RightKind, values: FormValues, taxItems: FormValues[], isEntrusted: boolean) => void;
@@ -107,8 +119,8 @@ interface ClaimFormProps {
 export default function ClaimForm({ onAdd, showEntrusted = true, initial }: ClaimFormProps) {
   const formId = useId();
   const [kind, setKind] = useState<RightKind>(initial?.kind ?? "mortgage");
-  const [values, setValues] = useState<FormValues>(initial?.values ?? {});
-  const [taxItems, setTaxItems] = useState<FormValues[]>(initial && initial.taxItems.length > 0 ? initial.taxItems : [{}]);
+  const [values, setValues] = useState<FormValues>(withWonCommas(initial?.values ?? {}));
+  const [taxItems, setTaxItems] = useState<FormValues[]>(initial && initial.taxItems.length > 0 ? initial.taxItems.map(withWonCommas) : [{}]);
   const [isEntrusted, setIsEntrusted] = useState(false);
 
   const setValue = (key: string, next: string) => setValues((prev) => ({ ...prev, [key]: next }));

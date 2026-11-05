@@ -50,3 +50,13 @@ export function assertWon(value: unknown): asserts value is Won {
     throw new RangeError(`금액은 0원 이상의 정수여야 합니다: ${String(value)}`);
   }
 }
+
+/**
+ * 금액 입력칸에서 글자를 칠 때마다 부른다. 숫자(와 쉼표)만 있으면 1000단위 쉼표를 넣어 준다.
+ * 예: "25000000" → "25,000,000". 숫자가 아닌 글자가 섞여 있으면 그대로 둔다(읽을 수 있는지는 parseWon이 따진다).
+ */
+export function autoFormatWonInput(text: string): string {
+  if (!/^[\d,]*$/.test(text)) return text;
+  const digits = text.replace(/,/g, "");
+  return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
