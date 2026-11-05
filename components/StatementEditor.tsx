@@ -63,7 +63,7 @@ export default function StatementEditor() {
     const read = readStatementGrids(source, options);
     const fromFile: Claim[] = read.claims.map((item) => {
       const built = buildClaim(`claim-${nextId.current++}`, item.kind, item.values, item.taxItems, false).claim;
-      return { ...built, source: item.source } as Claim;
+      return { ...built, source: item.source, ...(item.noAcquisition ? { noAcquisition: true } : {}) } as Claim;
     });
     setClaims((previous) => [...previous.filter((claim) => claim.source === undefined), ...fromFile]);
     setReadWarnings(read.warnings);

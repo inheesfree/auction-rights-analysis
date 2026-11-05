@@ -132,6 +132,12 @@ export interface LeaseClaim extends ClaimBase {
   region: Blank<LeaseRegion>;
   /** 월세. 주택이 아닌 임차(상가)일 때만 입력받는다. */
   monthlyRent: Blank<Won>;
+  /**
+   * 매수인이 인수하지 않는 임차보증금이면 `true`.
+   * 공매재산명세서에서 위임기관이 주택도시보증공사인 임차보증금이 그렇다 (담당자 확인, 2026-11-05).
+   * 순위 판단과 배분에는 영향이 없고, 매수인 인수 금액(lib/acquire.ts)만 계산하지 않는다.
+   */
+  noAcquisition?: boolean;
 }
 
 /** 국세/지방세 구분. */

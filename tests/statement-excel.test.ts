@@ -209,19 +209,53 @@ describe("명세서 엑셀 읽기: 임차인 없이 공공기관이 얽힌 구�
     return [page1, page2];
   }
 
-  test("임차인 표가 비어 있으면 임차인을 읽지 않고 이유를 알리며, 이해하지 못한 권리는 건너뛴다", () => {
-    const read = readStatementGrids(grids(), { region: "seoul" });
-    expect(read.claims.some((claim) => claim.kind === "lease")).toBe(false);
+  test("위임기관이 주택도시보증공사이면 임차보증금으로 읽고 날짜는 빈칸으로 두며 인수하지 않는다", () => {
+    const read = readStatementGrids(grids(), { region: "seoul", isHousing: true });
+    // 임차인 표가 비어 있다는 안내가 나오고, 임차권 줄(참고용)은 건너뛰기 경고를 내지 않는다
     expect(read.warnings.some((w) => w.includes("Page 1 21행") && w.includes("임차인 내용이 없어"))).toBe(true);
-    expect(read.warnings.some((w) => w.includes("Page 2 2행") && w.includes("임차권"))).toBe(true);
-    expect(read.warnings.some((w) => w.includes("Page 2 5행") && w.includes("위임기관"))).toBe(true);
-    // 읽은 것: 서울특별시 교부청구(지방세), 배분요구 없는 가압류(채권액 0)
+    expect(read.warnings.filter((w) => w.includes("건너뛰"))).toEqual([]);
     expect(read.claims.map((claim) => [claim.kind, claim.values.creditor, claim.values.amount])).toEqual([
       ["tax", "서울특별시", "61813300"],
       ["provisionalSeizure", "주택도시보증공사", "0"],
+      ["lease", "주택도시보증공사", "20760192273"],
     ]);
+    const lease = read.claims[2];
+    expect(lease.values).toMatchObject({ moveInDate: "", fixedDate: "", isHousing: "yes", region: "seoul", requestedDistribution: "yes" });
+    expect(lease.noAcquisition).toBe(true);
+    expect(lease.source).toBe("Page 2 5행");
+    expect(read.warnings.some((w) => w.includes("Page 2 5행") && w.includes("전입일자·확정일자는 명세서에서 읽을 수 없어") && w.includes("임차권 등기일 2024-08-19"))).toBe(true);
     expect(read.claims[0].values.taxType).toBe("local");
     expect(read.claims[1].values.requestedDistribution).toBe("");
     expect(read.isHousing).toBeNull(); // 건물 용도(업무시설)로는 주택인지 알 수 없다. 사용자가 고른다.
+  });
+
+  test("임차권 줄이 없어도 임차인의 날짜는 빈칸 + 경고 (참고 날짜만 빠진다)", () => {
+    const g = grids();
+    g[1].rows[1] = g[1].rows[1].map(() => "");
+    const read = readStatementGrids(g, { region: "seoul", isHousing: true });
+    const lease = read.claims.find((claim) => claim.kind === "lease")!;
+    expect(lease.values).toMatchObject({ moveInDate: "", fixedDate: "" });
+    expect(read.warnings.some((w) => w.includes("Page 2 5행") && w.includes("직접 입력해 주세요") && !w.includes("참고"))).toBe(true);
+  });
+
+  test("읽은 값으로 분석하면 주택도시보증공사 임차인은 가장 먼저이고 인수 대상이 아니다", () => {
+    const read = readStatementGrids(grids(), { region: "seoul", isHousing: true });
+    const claims: Claim[] = read.claims.map((item, index) => {
+      // 전입일자·확정일자는 사용자가 직접 입력한 것으로 본다 (명세서에서 읽을 수 없음).
+      const values = item.kind === "lease" ? { ...item.values, moveInDate: "2024-08-19", fixedDate: "2024-08-19" } : item.values;
+      const built = buildClaim(`hug-${index}`, item.kind, values, item.taxItems, false).claim;
+      return { ...built, source: item.source, ...(item.noAcquisition ? { noAcquisition: true } : {}) } as Claim;
+    });
+    expect(validateClaims(claims).canCalculate).toBe(true);
+    const analysis = analyzeStatement(claims);
+    expect(analysis.ok).toBe(true);
+    if (!analysis.ok) return;
+    expect(analysis.rows.map((row) => [row.stage, row.label])).toEqual([
+      ["1순위", "주택임차보증금(주택도시보증공사)"],
+      ["2순위", "조세(서울특별시) (세목 미기재)"],
+      ["3순위", "가압류(주택도시보증공사)"],
+    ]);
+    expect(analysis.acquiringTenants).toEqual([]); // 인수되지 않는다
+    expect(analysis.notices.some((text) => text.includes("주택도시보증공사인 임차보증금은 매수인이 인수하지 않습니다"))).toBe(true);
   });
 });

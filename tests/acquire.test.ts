@@ -54,3 +54,10 @@ test("배분 결과와 근거 글에 인수 금액이 함께 나온다", () => {
   expect(evidence.steps.some((step) => step.title.includes("인수할 임차보증금"))).toBe(true);
   expect(evidenceToText(evidence)).toContain("인수 43,500,000원");
 });
+
+test("위임기관이 주택도시보증공사인 임차보증금(noAcquisition)은 대항력 조건을 갖춰도 인수하지 않는다", () => {
+  const normal = lease("1000", "2016-10-05", "2016-10-05", "가");
+  const hug = { ...lease("2000", "2016-10-05", "2016-10-05", "주택도시보증공사"), noAcquisition: true } as LeaseClaim;
+  const result = acquiredDeposits([normal, hug], {});
+  expect(result.map((d) => d.label)).toEqual(["주택임차보증금(가)"]);
+});

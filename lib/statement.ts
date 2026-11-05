@@ -89,6 +89,9 @@ export function analyzeStatement(claims: readonly Claim[]): StatementAnalysis {
   if (result.acquiredDeposits.length > 0) {
     notices.push("대항력 있는 임차인(전입일자와 확정일자가 모두 있는 임차인)의 보증금 중 배분받지 못한 금액은 매수인이 인수합니다.");
   }
+  if (masked.some((claim) => claim.kind === "lease" && claim.noAcquisition)) {
+    notices.push("위임기관이 주택도시보증공사인 임차보증금은 매수인이 인수하지 않습니다. (담당자 확인)");
+  }
   if (result.circular.length > 0) {
     notices.push("순위가 서로 엇갈리는 권리(순환)가 있어 같은 순위로 묶어 보여줍니다. 실제 배분은 매각금액에 따라 안분됩니다.");
   }

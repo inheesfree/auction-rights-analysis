@@ -35,7 +35,8 @@ export function hasOpposingPower(lease: LeaseClaim): boolean {
  */
 export function acquiredDeposits(claims: readonly Claim[], paidByClaim: Readonly<Record<string, Won>>): AcquiredDeposit[] {
   return claims.flatMap((claim) => {
-    if (claim.kind !== "lease" || claim.amount === null || !hasOpposingPower(claim)) return [];
+    // 위임기관이 주택도시보증공사인 임차보증금은 매수인이 인수하지 않는다 (담당자 확인).
+    if (claim.kind !== "lease" || claim.amount === null || claim.noAcquisition || !hasOpposingPower(claim)) return [];
     const paid = paidByClaim[claim.id] ?? 0;
     return [
       {

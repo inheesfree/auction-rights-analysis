@@ -29,6 +29,8 @@ export interface ReadClaim {
   kind: RightKind;
   values: FormValues;
   taxItems: FormValues[];
+  /** 매수인이 인수하지 않는 임차보증금이면 `true` (위임기관이 주택도시보증공사인 경우). */
+  noAcquisition?: boolean;
 }
 
 export interface StatementRead {
@@ -99,7 +101,10 @@ type Classified =
   | { kind: "tax"; taxType: TaxKind }
   | null;
 
-const PUBLIC_CHARGE_WORDS = ["건강보험", "국민연금", "근로복지", "고용보험", "산재", "공단"];
+/** 위임기관이 이 기관이면 임차보증금으로 읽는다. */
+const HUG_NAME = "주택도시보증공사";
+
+const PUBLIC_CHARGE_WORDS =["건강보험", "국민연금", "근로복지", "고용보험", "산재", "공단"];
 const NATIONAL_TAX_WORDS = ["세무서", "국세", "세관"];
 const LOCAL_TAX_WORDS = ["시청", "구청", "군청", "도청", "특별시", "광역시", "지방자치단체"];
 
@@ -206,9 +211,22 @@ function readTenants(
 }
 
 /** 배분요구 및 채권신고 현황 표를 읽는다. 표가 여러 시트에 걸쳐 있으면 이어서 읽는다. */
-function readRights(grids: readonly SheetGrid[], tenantTableFound: boolean, tenantCount: number, warnings: string[]): ReadClaim[] {
+function readRights(
+  grids: readonly SheetGrid[],
+  tenantTableFound: boolean,
+  tenantCount: number,
+  options: ReadOptions,
+  isHousing: boolean | null,
+  warnings: string[],
+): ReadClaim[] {
   const claims: ReadClaim[] = [];
   let inTable = false;
+  // 위임기관이 주택도시보증공사인 권리는 임차보증금으로 읽는다. 기준일은 다른 임차인과 같이 전입일자와
+  // 확정일자 중 늦은 날짜인데(담당자 확인 2026-11-05), 명세서에서 읽을 수 없으므로 추측하지 않고 빈칸으로 둔다.
+  // 같은 표의 「임차권」(주택도시보증공사) 등기일은 안내 문구의 참고 날짜로만 쓴다.
+  let hugRegistrationDate = "";
+  let hugRegistrationSource = "";
+  const hugLeases: ReadClaim[] = [];
 
   for (const grid of grids) {
     grid.rows.forEach((row, rowIndex) => {
@@ -252,6 +270,35 @@ function readRights(grids: readonly SheetGrid[], tenantTableFound: boolean, tena
         } else if (tenantCount === 0) {
           warnings.push(`${where(grid, rowIndex)}: 「임차인 배분 요구 및 채권신고 현황」 표에 임차인 내용이 없어(배분요구 없음) 임차인은 읽지 않았습니다.`);
         }
+        return;
+      }
+
+      // 주택도시보증공사의 임차권(등기)은 따로 권리로 읽지 않고, 안내 문구의 참고 날짜로만 쓴다.
+      if (relation.includes("임차권") && name.includes(HUG_NAME)) {
+        hugRegistrationDate = preDates[0] ?? "";
+        hugRegistrationSource = where(grid, rowIndex);
+        return;
+      }
+      // 위임기관이 주택도시보증공사이면 임차보증금으로 보고, 매수인이 인수하지 않는다 (담당자 확인 2026-11-05).
+      if (relation.includes("위임기관") && name.includes(HUG_NAME)) {
+        const housing = options.isHousing === undefined || options.isHousing === null ? isHousing : options.isHousing;
+        const lease: ReadClaim = {
+          source: where(grid, rowIndex),
+          kind: "lease",
+          values: {
+            creditor: name,
+            amount: claimAmount,
+            moveInDate: "",
+            fixedDate: "",
+            isHousing: housing === null ? "" : housing ? "yes" : "no",
+            region: options.region ?? "",
+            requestedDistribution: requestedAt ? "yes" : "",
+          },
+          taxItems: [],
+          noAcquisition: true,
+        };
+        claims.push(lease);
+        hugLeases.push(lease);
         return;
       }
 
@@ -322,6 +369,12 @@ function readRights(grids: readonly SheetGrid[], tenantTableFound: boolean, tena
       }
     });
   }
+
+  // 주택도시보증공사 임차인의 전입일자·확정일자는 명세서에 없으므로 빈칸으로 두고 직접 입력하도록 알린다.
+  for (const lease of hugLeases) {
+    const reference = hugRegistrationDate !== "" ? ` (참고: ${hugRegistrationSource} 임차권 등기일 ${hugRegistrationDate})` : "";
+    warnings.push(`${lease.source}: 주택도시보증공사 임차인의 전입일자·확정일자는 명세서에서 읽을 수 없어 빈칸으로 두었습니다. 직접 입력해 주세요.${reference}`);
+  }
   return claims;
 }
 
@@ -333,7 +386,7 @@ export function readStatementGrids(grids: readonly SheetGrid[], options: ReadOpt
   const warnings: string[] = [];
   const { addressText, isHousing } = readProperty(grids);
   const { claims: tenants, tableFound } = readTenants(grids, options, isHousing, warnings);
-  const rights = readRights(grids, tableFound, tenants.length, warnings);
+  const rights = readRights(grids, tableFound, tenants.length, options, isHousing, warnings);
 
   if (tenants.length + rights.length === 0) {
     warnings.push("읽을 수 있는 권리를 찾지 못했습니다. 공매재산명세서 엑셀이 맞는지 확인해 주세요.");
