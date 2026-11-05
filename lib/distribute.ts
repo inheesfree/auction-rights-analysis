@@ -12,11 +12,18 @@
 //
 // 이 단계에서는 계산하지 않고 이유를 알리는 경우 (틀린 숫자를 내지 않기 위해)
 //   - 담당자 기준이 없는 판단(undetermined), 순위 규칙이 없는 쌍
-//   - 순위가 서로 엇갈리는 순환 (순환 배분은 작업 11)
+//   - 공과금·임차보증금·조세가 한 건씩 얽힌 경우를 뺀 나머지 순환 (그 순환은 lib/circular.ts로 계산한다)
 //   - 주택 전세권 (순위 규칙이 정해지지 않음), 소액임차 기준표가 없는 지역·시기
 
 import { claimLabel } from "./claimLabel";
-import { assertWon, sumWon } from "./money";
+import {
+  absorbCycle,
+  describeSupportedCycle,
+  findStronglyConnected,
+  type CircularAllocation,
+  type CycleMember,
+} from "./circular";
+import { assertWon, formatWon, sumWon } from "./money";
 import { prorate } from "./prorate";
 import { applyRule5, type Rule5Transfer } from "./rule5";
 import { judgePair, type Judgment, type Participant } from "./rules";
@@ -57,6 +64,8 @@ export type DistributionResult =
       excluded: ExcludedClaim[];
       /** 규칙 5에 따라 당해세에서 임차인에게 옮긴 금액. 없으면 빈 목록. */
       rule5Transfers: Rule5Transfer[];
+      /** 순환 배분(공과금·임차보증금·조세) 계산 내역. 순환이 없으면 빈 목록. */
+      circular: CircularAllocation[];
       /** 모든 순위 판단과 근거. */
       judgments: Judgment[];
       /** 모든 채권에 배분하고 남은 금액. */
@@ -211,69 +220,150 @@ export function distribute(saleProceeds: Won, claims: readonly Claim[]): Distrib
   }
   if (contradictions.length > 0) return { ok: false, reason: "cycle", messages: contradictions, judgments };
 
-  // ④ 앞선 묶음부터 단계(rank)를 매긴다. 앞서는 묶음이 없는 묶음들이 한 단계가 된다.
+  // ④ 순위가 서로 엇갈리는 묶음(순환)을 찾는다.
+  //    공과금·임차보증금·조세가 한 건씩 한 바퀴 도는 순환만 계산하고(lib/circular.ts),
+  //    그 밖의 순환은 계산하지 않고 이유를 알린다.
   const roots = [...new Set(participants.map((_, index) => find(index)))];
-  const indegree = new Map<number, number>(roots.map((r) => [r, 0]));
-  const next = new Map<number, number[]>(roots.map((r) => [r, []]));
+  const adjacency = new Map<number, number[]>(roots.map((r) => [r, []]));
   for (const edge of edges) {
     const [u, v] = edge.split(">").map(Number);
-    next.get(u)!.push(v);
-    indegree.set(v, (indegree.get(v) ?? 0) + 1);
+    adjacency.get(u)!.push(v);
   }
-  const levels: number[][] = [];
-  let frontier = roots.filter((r) => indegree.get(r) === 0);
-  let placed = 0;
-  while (frontier.length > 0) {
-    levels.push(frontier);
-    placed += frontier.length;
-    const upcoming: number[] = [];
-    for (const u of frontier) {
-      for (const v of next.get(u)!) {
-        indegree.set(v, indegree.get(v)! - 1);
-        if (indegree.get(v) === 0) upcoming.push(v);
-      }
-    }
-    frontier = upcoming;
-  }
-  if (placed < roots.length) {
-    const stuck = roots.filter((r) => (indegree.get(r) ?? 0) > 0);
-    const names = participants.filter((_, index) => stuck.includes(find(index))).map((p) => p.label);
+  const components = findStronglyConnected(roots, adjacency);
+  const unitOf = new Map<number, number>();
+  components.forEach((component, id) => component.forEach((root) => unitOf.set(root, id)));
+  const participantsOfUnit = (id: number): { index: number; participant: Participant }[] =>
+    participants.flatMap((participant, index) => (unitOf.get(find(index)) === id ? [{ index, participant }] : []));
+
+  const cycleOfUnit = new Map<number, CycleMember[]>();
+  const unsupportedCycles: string[] = [];
+  components.forEach((component, id) => {
+    if (component.length < 2) return;
+    const members = participantsOfUnit(id);
+    const described = component.length === 3 ? describeSupportedCycle(members, before) : null;
+    if (described) cycleOfUnit.set(id, described);
+    else unsupportedCycles.push(members.map((m) => m.participant.label).join(", "));
+  });
+  if (unsupportedCycles.length > 0) {
     return {
       ok: false,
       reason: "cycle",
-      messages: [`순위가 서로 엇갈려(순환) 한 줄로 정할 수 없습니다: ${names.join(", ")}. 순환 배분 계산은 아직 구현되지 않아 이 앱이 계산하지 않습니다.`],
+      messages: unsupportedCycles.map(
+        (names) =>
+          `순위가 서로 엇갈려(순환) 한 줄로 정할 수 없습니다: ${names}. 이 앱은 공과금·임차보증금·조세가 한 건씩 얽힌 순환만 계산하며, 그 밖의 순환은 "이 앱이 다루지 않는 경우"입니다.`,
+      ),
       judgments,
     };
+  }
+
+  // 순환 묶음을 한 덩어리로 보고, 앞서는 묶음이 없는 묶음들을 한 단계로 묶어 단계(rank)를 매긴다.
+  const unitEdges = new Set<string>();
+  for (const edge of edges) {
+    const [u, v] = edge.split(">").map(Number);
+    const from = unitOf.get(u)!;
+    const to = unitOf.get(v)!;
+    if (from !== to) unitEdges.add(`${from}>${to}`);
+  }
+  const indegree = new Map<number, number>(components.map((_, id) => [id, 0]));
+  const next = new Map<number, number[]>(components.map((_, id) => [id, []]));
+  for (const edge of unitEdges) {
+    const [from, to] = edge.split(">").map(Number);
+    next.get(from)!.push(to);
+    indegree.set(to, indegree.get(to)! + 1);
+  }
+  const levels: number[][] = [];
+  let frontier = components.map((_, id) => id).filter((id) => indegree.get(id) === 0);
+  while (frontier.length > 0) {
+    levels.push(frontier);
+    const upcoming: number[] = [];
+    for (const from of frontier) {
+      for (const to of next.get(from)!) {
+        indegree.set(to, indegree.get(to)! - 1);
+        if (indegree.get(to) === 0) upcoming.push(to);
+      }
+    }
+    frontier = upcoming;
   }
 
   // ⑤ 단계별 배분
   let remaining = superResult.remaining;
   const lines: DistributionLine[] = [];
-  levels.forEach((levelRoots, levelIndex) => {
-    const members = participants
-      .filter((p, index) => levelRoots.includes(find(index)))
-      .sort((x, y) => x.order - y.order);
-    const claimedAmounts = members.map((m) => m.amount);
+  const circular: CircularAllocation[] = [];
+  const participantByKey = new Map(participants.map((p) => [p.key, p]));
+  type Slot =
+    | { kind: "single"; order: number; participant: Participant }
+    | { kind: "cycle"; order: number; members: CycleMember[] };
+
+  levels.forEach((levelUnits, levelIndex) => {
+    // 한 단계에 들어가는 덩어리: 순환 묶음은 한 덩어리, 나머지는 채권(세목) 하나가 한 덩어리
+    const slots: Slot[] = [];
+    for (const id of levelUnits) {
+      const members = participantsOfUnit(id).map((m) => m.participant);
+      const cycle = cycleOfUnit.get(id);
+      if (cycle) slots.push({ kind: "cycle", order: Math.min(...members.map((m) => m.order)), members: cycle });
+      else for (const participant of members) slots.push({ kind: "single", order: participant.order, participant });
+    }
+    slots.sort((x, y) => x.order - y.order);
+
+    const claimedAmounts = slots.map((slot) =>
+      slot.kind === "single" ? slot.participant.amount : sumWon(slot.members.map((m) => m.amount)),
+    );
     const total = sumWon(claimedAmounts);
     const shortage = total > remaining;
-    const paidAmounts = shortage ? prorate(remaining, claimedAmounts).shares : claimedAmounts;
-    members.forEach((member, index) => {
-      const notes: string[] = [];
-      if (members.length > 1) notes.push("같은 순위(동순위)로 묶여 있습니다.");
-      if (shortage && members.length > 1) notes.push("남은 금액이 모자라 채권액에 비례해 안분했습니다. (안분 방식은 임시 규칙, 확인 필요)");
-      if (shortage && members.length === 1) notes.push("남은 금액이 모자라 일부만 배분했습니다.");
-      lines.push({
-        key: member.key,
-        claimId: member.claimId,
-        label: member.label,
-        kind: member.kind,
-        rank: levelIndex + 1,
-        claimed: member.amount,
-        paid: paidAmounts[index],
-        notes,
+    const allotted = shortage ? prorate(remaining, claimedAmounts).shares : claimedAmounts;
+
+    const levelLines: { order: number; line: DistributionLine }[] = [];
+    slots.forEach((slot, slotIndex) => {
+      if (slot.kind === "single") {
+        const member = slot.participant;
+        const notes: string[] = [];
+        if (slots.length > 1) notes.push("같은 순위(동순위)로 묶여 있습니다.");
+        if (shortage && slots.length > 1) notes.push("남은 금액이 모자라 채권액에 비례해 안분했습니다. (안분 방식은 임시 규칙, 확인 필요)");
+        if (shortage && slots.length === 1) notes.push("남은 금액이 모자라 일부만 배분했습니다.");
+        levelLines.push({
+          order: member.order,
+          line: {
+            key: member.key,
+            claimId: member.claimId,
+            label: member.label,
+            kind: member.kind,
+            rank: levelIndex + 1,
+            claimed: member.amount,
+            paid: allotted[slotIndex],
+            notes,
+          },
+        });
+        return;
+      }
+      // 순환 배분: 1차 안분 후 한 번만 흡수 (재흡수 없음)
+      const { finals, detail } = absorbCycle(allotted[slotIndex], slot.members);
+      circular.push(detail);
+      slot.members.forEach((cycleMember, j) => {
+        const member = participantByKey.get(cycleMember.key)!;
+        const d = detail.members[j];
+        const notes = detail.shortage
+          ? [
+              `순환 배분(공과금·임차보증금·조세): 1차 안분 ${formatWon(d.first)} → 흡수 +${formatWon(d.absorbed)}(${d.absorbsFrom}), 빼앗김 −${formatWon(d.lost)} → ${formatWon(d.final)}`,
+              "1차 안분 후 한 번만 흡수하고 재흡수는 하지 않습니다. (담당자 확인 방식, 1원 단위 나머지는 임시 규칙)",
+            ]
+          : ["순위가 서로 엇갈리지만 배분재원이 충분해 순환 영향 없이 전액 배분했습니다."];
+        levelLines.push({
+          order: member.order,
+          line: {
+            key: member.key,
+            claimId: member.claimId,
+            label: member.label,
+            kind: member.kind,
+            rank: levelIndex + 1,
+            claimed: member.amount,
+            paid: finals[j],
+            notes,
+          },
+        });
       });
     });
-    remaining -= sumWon(paidAmounts);
+    lines.push(...levelLines.sort((x, y) => x.order - y.order).map((entry) => entry.line));
+    remaining -= sumWon(allotted);
   });
 
   // ⑥ 규칙 5: 당해세 우선으로 먼저 배분한 뒤, 임차인이 당해세의 우선징수액 범위에서 대신 변제받는다.
@@ -302,6 +392,7 @@ export function distribute(saleProceeds: Won, claims: readonly Claim[]): Distrib
     lines: finalLines,
     excluded,
     rule5Transfers: adjusted.transfers,
+    circular,
     judgments,
     leftover: remaining,
     paidByClaim,
