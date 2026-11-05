@@ -34,7 +34,7 @@ function ActionButtons() {
   return (
     <>
       <Link href="/statement" className="rounded-full px-5 py-2.5 text-center text-sm font-medium text-white" style={{ background: "var(--color-accent)" }}>
-        명세서 올리기
+        권리분석 바로가기
       </Link>
       <Link href="/officer" className="rounded-full px-5 py-2.5 text-center text-sm font-medium" style={{ background: "var(--color-login-bg)", color: "var(--color-text)" }}>
         담당자용 열기
@@ -150,7 +150,7 @@ export default function HomeHero() {
                   gap: 32,
                 }}
               >
-                명세서 올리기
+                권리분석 바로가기
                 <ArrowRightCircle size={20} aria-hidden="true" />
               </Link>
             </motion.div>

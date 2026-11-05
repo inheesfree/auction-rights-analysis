@@ -18,15 +18,122 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* 디자인은 밝은 화면 하나만 쓴다(담당자 확인 2026-11-05). 컴퓨터가 어두운 모드여도 `dark:` 스타일을 쓰지 않는다. */
+@custom-variant dark (&:where(.dark, .dark *));
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body), Arial, Helvetica, sans-serif;
+}
+
+/* ───────── 상세 페이지(입찰고객용·담당자용) 공통 모양 ───────── */
+.app-page {
+  background: var(--color-login-bg);
+  color: var(--color-text);
+}
+.app-header {
+  background: rgba(242, 242, 238, 0.9);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(25, 40, 55, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.app-tab {
+  border-radius: 999px;
+  padding: 8px 16px;
+  transition: background 0.2s;
+}
+.app-tab:hover {
+  background: rgba(25, 40, 55, 0.06);
+}
+.app-tab-on {
+  background: var(--color-accent);
+  color: #fff;
+}
+.app-tab-on:hover {
+  background: var(--color-accent);
+  filter: brightness(1.1);
+}
+.app-title {
+  padding: clamp(28px, 5vw, 48px) 0 24px;
+}
+.app-title h1 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: clamp(1.65rem, 4.5vw, 2.5rem);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  margin-bottom: 12px;
+}
+.app-lead {
+  max-width: 720px;
+  line-height: 1.65;
+  opacity: 0.8;
+}
+.app-notice {
+  display: inline-block;
+  margin-top: 16px;
+  border-radius: 12px;
+  background: #fff;
+  padding: 10px 14px;
+  font-size: 0.875rem;
+  box-shadow: 0 1px 0 rgba(25, 40, 55, 0.06);
+}
+
+/* 큰 구역은 흰 카드로 */
+.app-body section[aria-labelledby] {
+  background: #fff;
+  border-radius: 20px;
+  padding: clamp(16px, 3vw, 28px);
+  box-shadow: 0 2px 16px rgba(25, 40, 55, 0.06);
+}
+.app-body section[aria-labelledby] h2 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+/* 입력칸 */
+.app-body input:not([type="file"]),
+.app-body select,
+.app-body textarea {
+  border-radius: 10px;
+  border-color: rgba(25, 40, 55, 0.2);
+  background: #fff;
+}
+.app-body input:focus-visible,
+.app-body select:focus-visible,
+.app-body textarea:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+/* 주요 버튼(검은 버튼)은 보라색으로, 보조 버튼은 둥글게 */
+.app-body button {
+  border-radius: 999px;
+  transition: transform 0.15s, filter 0.15s;
+}
+.app-body button.bg-black {
+  background: var(--color-accent);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(115, 66, 226, 0.25);
+}
+.app-body button.bg-black:hover {
+  background: var(--color-accent);
+  filter: brightness(1.1);
+}
+.app-body button:active {
+  transform: scale(0.97);
+}
+.app-body input[type="file"]::file-selector-button {
+  border-radius: 999px;
+}
+/* 표 */
+.app-body table thead tr {
+  background: var(--color-login-bg);
+}
+.app-body table th {
+  font-weight: 600;
+}
+.app-body :is(div, p)[role="alert"] {
+  border-radius: 12px;
 }
