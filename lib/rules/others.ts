@@ -82,8 +82,9 @@ export function judgeLeaseVsLease(a: LeaseClaim, b: LeaseClaim): Judgment {
 /**
  * 임차인(a)과 당해세(b). 규칙 5(2023년 개정)의 앞부분이다.
  * - 임차인 기준일이 당해세 법정기일 이상이면 당해세 우선 (규칙 5의 둘째 줄)
- * - 임차인 기준일이 당해세 법정기일보다 빠르면 당해세가 원칙이지만 임차인이 당해세의 우선징수액
- *   범위에서 대신 변제받는 별도 계산(규칙 5, 작업 10)이 필요하므로 판단하지 않는다.
+ * - 임차인 기준일이 당해세 법정기일보다 빠르면 순위는 당해세가 먼저(가상 배분)이고,
+ *   배분한 뒤 임차인이 당해세의 우선징수액 범위에서 대신 변제받는 조정(lib/rule5.ts)을 적용한다.
+ *   그래서 `rule5Adjustment` 표시를 남긴다.
  */
 export function judgeLeaseVsDangHaeSe(lease: LeaseClaim, tax: TaxPart): Judgment {
   if (tax.item.isDangHaeSe !== true) throw new RangeError("당해세 세목만 이 규칙으로 판단합니다.");
@@ -101,8 +102,9 @@ export function judgeLeaseVsDangHaeSe(lease: LeaseClaim, tax: TaxPart): Judgment
   if (compareDates(tenantDate, legalDueDate) < 0) {
     return {
       ...base,
-      winner: "undetermined",
-      reason: "임차인의 우선변제권이 당해세 법정기일보다 앞서, 임차보증금이 당해세의 우선징수액 범위에서 대신 변제받는 별도 계산(규칙 5)이 필요합니다. 이 계산은 아직 구현되지 않아 이 앱이 판단하지 않습니다.",
+      winner: "b",
+      rule5Adjustment: true,
+      reason: "당해세가 원칙적으로 먼저 배분받습니다(가상 배분). 임차인의 우선변제권이 당해세 법정기일보다 앞서므로, 배분한 뒤 임차보증금이 당해세의 우선징수액 범위에서 대신 변제받는 조정(규칙 5)을 적용합니다.",
     };
   }
   return { ...base, winner: "b", reason: "임차인 기준일이 당해세 법정기일보다 늦거나 같아 당해세가 우선합니다." };

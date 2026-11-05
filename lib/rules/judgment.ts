@@ -38,6 +38,8 @@ export interface Judgment {
   legalBasisUnverified: boolean;
   /** 판단 이유 한 줄. */
   reason: string;
+  /** `true`이면 이 판단 뒤에 규칙 5(당해세 → 임차인 대신 변제) 조정 계산을 적용한다 (lib/rule5.ts). */
+  rule5Adjustment?: boolean;
 }
 
 /** 조세의 세목 하나. 세목마다 법정기일이 달라서 세목 단위로 비교한다. */

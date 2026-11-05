@@ -6,17 +6,19 @@
 //   ② 나머지 채권을 덩어리(조세는 세목 하나)로 나누고, 모든 쌍의 순위를 규칙(lib/rules)으로 판단한다.
 //   ③ 순위 판단으로 "앞 → 뒤" 관계 그래프를 만들고, 같은 순위(동순위)는 한 묶음으로 본다.
 //   ④ 앞선 묶음부터 남은 금액을 배분한다. 한 단계의 채권액이 남은 금액보다 많으면 채권액에 비례해 안분한다.
-//   ⑤ 배분액의 합계가 매각대금과 같은지 검증한다. 다르면 결과를 내지 않고 오류로 처리한다.
+//   ⑤ 규칙 5: 임차인이 당해세보다 먼저 우선변제권을 갖췄으면, 당해세 우선으로 배분한 뒤
+//      임차인이 당해세의 우선징수액 범위에서 대신 변제받는다 (lib/rule5.ts).
+//   ⑥ 배분액의 합계가 매각대금과 같은지 검증한다. 다르면 결과를 내지 않고 오류로 처리한다.
 //
 // 이 단계에서는 계산하지 않고 이유를 알리는 경우 (틀린 숫자를 내지 않기 위해)
 //   - 담당자 기준이 없는 판단(undetermined), 순위 규칙이 없는 쌍
 //   - 순위가 서로 엇갈리는 순환 (순환 배분은 작업 11)
-//   - 당해세보다 먼저 우선변제권을 갖춘 주택임차인 (규칙 5 조정 계산은 작업 10)
 //   - 주택 전세권 (순위 규칙이 정해지지 않음), 소액임차 기준표가 없는 지역·시기
 
 import { claimLabel } from "./claimLabel";
 import { assertWon, sumWon } from "./money";
 import { prorate } from "./prorate";
+import { applyRule5, type Rule5Transfer } from "./rule5";
 import { judgePair, type Judgment, type Participant } from "./rules";
 import { taxPartLabel } from "./rules/judgment";
 import { allocateSuperPriority, type SuperPriorityLine } from "./superPriority";
@@ -53,6 +55,8 @@ export type DistributionResult =
       /** 순위대로 배분한 단계. */
       lines: DistributionLine[];
       excluded: ExcludedClaim[];
+      /** 규칙 5에 따라 당해세에서 임차인에게 옮긴 금액. 없으면 빈 목록. */
+      rule5Transfers: Rule5Transfer[];
       /** 모든 순위 판단과 근거. */
       judgments: Judgment[];
       /** 모든 채권에 배분하고 남은 금액. */
@@ -272,8 +276,12 @@ export function distribute(saleProceeds: Won, claims: readonly Claim[]): Distrib
     remaining -= sumWon(paidAmounts);
   });
 
-  // ⑥ 합계 검증: 배분액의 합계 + 남은 금액 = 매각대금
-  const paidTotal = sumWon([...superResult.lines.map((l) => l.paid), ...lines.map((l) => l.paid)]);
+  // ⑥ 규칙 5: 당해세 우선으로 먼저 배분한 뒤, 임차인이 당해세의 우선징수액 범위에서 대신 변제받는다.
+  const adjusted = applyRule5(participants, lines);
+  const finalLines = adjusted.lines;
+
+  // ⑦ 합계 검증: 배분액의 합계 + 남은 금액 = 매각대금
+  const paidTotal = sumWon([...superResult.lines.map((l) => l.paid), ...finalLines.map((l) => l.paid)]);
   if (paidTotal + remaining !== saleProceeds) {
     return {
       ok: false,
@@ -285,14 +293,15 @@ export function distribute(saleProceeds: Won, claims: readonly Claim[]): Distrib
 
   const paidByClaim: Record<string, Won> = {};
   for (const line of superResult.lines) paidByClaim[line.claimId] = (paidByClaim[line.claimId] ?? 0) + line.paid;
-  for (const line of lines) paidByClaim[line.claimId] = (paidByClaim[line.claimId] ?? 0) + line.paid;
+  for (const line of finalLines) paidByClaim[line.claimId] = (paidByClaim[line.claimId] ?? 0) + line.paid;
 
   return {
     ok: true,
     saleProceeds,
     superPriority: superResult.lines,
-    lines,
+    lines: finalLines,
     excluded,
+    rule5Transfers: adjusted.transfers,
     judgments,
     leftover: remaining,
     paidByClaim,
