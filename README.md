@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 공매 재산 권리분석 모델 서비스
 
-## Getting Started
+공매 재산에 설정된 권리(근저당·임차보증금·조세·공과금 등)의 **순위를 판단하고, 배분 금액과 그 근거를 함께 보여주는** 웹 서비스입니다. 참고용이며 법적 효력이 없습니다.
 
-First, run the development server:
+## 누구를 위한 서비스인가
+
+| 이용 대상 | 화면 | 할 수 있는 일 |
+|---|---|---|
+| 입찰고객 | `/statement` (입찰고객용) | 온비드 공매재산명세서(엑셀)를 올리면 권리를 읽어 **권리 순위**와 매수인이 **인수할 수 있는 임차보증금**을 보여줍니다. 매각금액을 모르므로 금액은 계산하지 않고 순위만 보여줍니다. |
+| 공매관리 담당자 | `/officer` (담당자용) | 채권을 직접 입력하고 매각대금을 넣으면 **순위·배분액·예상 회수액·인수할 보증금**과 근거를 보여줍니다. |
+
+## 이용 순서
+
+1. **STEP 1 입력** — 명세서 엑셀 올리기 또는 직접 입력
+2. **STEP 2 입력 내용 확인** — 읽은 값 확인·수정, 입력값 검사, 「권리분석 시작」
+3. **STEP 3 권리분석 결과** — 순위, 배분 결과, 분석 근거
+
+## 지키는 원칙
+
+- **계산은 AI가 아닌 정해진 규칙(일반 코드)으로만** 합니다. 순위 판단과 금액 계산에 AI 호출이 없습니다.
+- 읽은 값은 **사용자가 확인하기 전에는 분석에 쓰지 않고**, 읽지 못한 값은 추측하지 않고 빈칸으로 둡니다.
+- 모든 판단에 **비교한 기준일·적용 규칙·결과(근거)** 를 붙입니다.
+- 배분액의 합계는 매각대금과 1원도 어긋나지 않아야 하며, 어긋나면 결과를 내지 않고 오류로 처리합니다.
+- 앱이 다루지 않는 경우(가압류·근저당·일반 조세가 얽힌 순환 배분 등)는 계산하지 않고 그렇게 안내합니다.
+- 올린 파일과 입력한 내용은 **서버에 저장하지 않습니다.** 엑셀은 사용자의 브라우저 안에서만 읽고, 이름은 가려서(예: 홍○○) 보여줍니다.
+
+## 기술 스택
+
+Next.js 16 (App Router) · React 19 · TypeScript(strict) · Tailwind CSS 4 · Vitest · Framer Motion · SheetJS(엑셀 읽기) · Vercel 배포
+
+## 실행 방법
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev     # 개발 서버 (http://localhost:3000)
+npm test        # 시험 (담당자 확인 사례 포함)
+npm run lint    # 코드 검사
+npm run build   # 빌드
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 문서
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- [`PRD.md`](./PRD.md) — 기획서(문제 정의, 목표, 이용 흐름, 범위)
+- [`PLAN.md`](./PLAN.md) — 개발 계획과 작업 순서
+- [`DESIGN.md`](./DESIGN.md) — 화면·구조 설계
+- [`판단규칙_초안.md`](./판단규칙_초안.md), [`법령정리.md`](./법령정리.md) — 순위 판단 규칙과 법령 정리 (담당자 검토 전 초안)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 알려둘 점
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- 순위 판단 규칙 중 일부(`[확인 필요]` 표시)와 1원 단위 안분 방식은 담당자 확인 전의 임시 기준입니다.
+- 시험에는 가상 데이터와 온비드에 공개된 공매재산명세서만 사용했으며, 실제 업무 자료는 포함하지 않았습니다.
+- 이 서비스는 법률 자문이 아닙니다.
