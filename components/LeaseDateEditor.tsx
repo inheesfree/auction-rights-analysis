@@ -4,7 +4,7 @@
 // 명세서에서 읽지 못한 날짜(예: 위임기관이 주택도시보증공사인 임차인)를 사용자가 직접 채울 때 쓴다.
 
 import { useState } from "react";
-import { parseDate } from "@/lib/dates";
+import { autoFormatDateInput, parseDate } from "@/lib/dates";
 
 interface LeaseDateEditorProps {
   moveInDate: string | null;
@@ -37,7 +37,7 @@ export default function LeaseDateEditor({ moveInDate, fixedDate, onSave }: Lease
     const a = moveIn.trim();
     const b = fixed.trim();
     if ((a !== "" && parseDate(a) === null) || (b !== "" && parseDate(b) === null)) {
-      setError("날짜는 2021-03-10처럼 입력해 주세요.");
+      setError("날짜는 20210310 또는 2021-03-10처럼 입력해 주세요.");
       return;
     }
     setError("");
@@ -49,11 +49,11 @@ export default function LeaseDateEditor({ moveInDate, fixedDate, onSave }: Lease
     <div className="space-y-1">
       <label className="block text-xs">
         전입일자
-        <input className={`${INPUT_CLASS} ml-1`} value={moveIn} onChange={(e) => setMoveIn(e.target.value)} placeholder="2021-03-10" />
+        <input className={`${INPUT_CLASS} ml-1`} value={moveIn} onChange={(e) => setMoveIn(autoFormatDateInput(e.target.value))} placeholder="20210310" />
       </label>
       <label className="block text-xs">
         확정일자
-        <input className={`${INPUT_CLASS} ml-1`} value={fixed} onChange={(e) => setFixed(e.target.value)} placeholder="2021-03-10" />
+        <input className={`${INPUT_CLASS} ml-1`} value={fixed} onChange={(e) => setFixed(autoFormatDateInput(e.target.value))} placeholder="20210310" />
       </label>
       {error ? <p role="alert" className="text-xs text-red-700 dark:text-red-300">{error}</p> : null}
       <div className="flex gap-1">

@@ -30,10 +30,21 @@ export function isValidDate(value: unknown): value is DateString {
  * 형식이 다르거나 없는 날짜면 추측하지 않고 `null`(빈칸)을 돌려준다.
  */
 export function parseDate(text: string): Blank<DateString> {
-  const match = /^\s*(\d{4})\s*[-./]\s*(\d{1,2})\s*[-./]\s*(\d{1,2})\s*\.?\s*$/.exec(text);
+  // 숫자 8자리(20210310)도 받아들인다 (담당자 확인 2026-11-05).
+  const match =
+    /^\s*(\d{4})\s*[-./]\s*(\d{1,2})\s*[-./]\s*(\d{1,2})\s*\.?\s*$/.exec(text) ?? /^\s*(\d{4})(\d{2})(\d{2})\s*$/.exec(text);
   if (!match) return null;
   const normalized = `${match[1]}-${match[2].padStart(2, "0")}-${match[3].padStart(2, "0")}`;
   return isValidDate(normalized) ? normalized : null;
+}
+
+/**
+ * 날짜 입력칸에서 글자를 칠 때마다 부른다. 숫자 8자리(20210310)가 되면 바로 `2021-03-10` 모양으로 바꿔 준다.
+ * 그 밖의 글자는 그대로 둔다 (실제로 있는 날짜인지는 여기서 따지지 않는다. 그건 parseDate가 한다).
+ */
+export function autoFormatDateInput(text: string): string {
+  const match = /^\s*(\d{4})(\d{2})(\d{2})\s*$/.exec(text);
+  return match ? `${match[1]}-${match[2]}-${match[3]}` : text;
 }
 
 /** 날짜를 화면용 글자로 바꾼다. 예: "2021-03-10" → "2021년 3월 10일" */

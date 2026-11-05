@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "vitest";
 import { isWon, parseWon, formatWon, sumWon } from "../lib/money";
-import { isValidDate, parseDate, formatDate, compareDates, laterDate, addDays } from "../lib/dates";
+import { autoFormatDateInput, isValidDate, parseDate, formatDate, compareDates, laterDate, addDays } from "../lib/dates";
 
 
 const t = test;
@@ -47,6 +47,20 @@ t("parseDate: 여러 입력 모양", () => {
   assert.equal(parseDate("2021.2.30"), null);
   assert.equal(parseDate("21.3.10"), null);
   assert.equal(parseDate("abc"), null);
+});
+t("parseDate: 숫자 8자리(yyyymmdd)도 읽는다", () => {
+  assert.equal(parseDate("20210310"), "2021-03-10");
+  assert.equal(parseDate(" 20210310 "), "2021-03-10");
+  assert.equal(parseDate("20210230"), null); // 없는 날짜
+  assert.equal(parseDate("2021031"), null); // 7자리
+  assert.equal(parseDate("202103100"), null); // 9자리
+});
+t("autoFormatDateInput: 8자리가 되면 yyyy-mm-dd로 바꾸고 그 밖은 그대로 둔다", () => {
+  assert.equal(autoFormatDateInput("20210310"), "2021-03-10");
+  assert.equal(autoFormatDateInput("2021031"), "2021031"); // 아직 입력 중
+  assert.equal(autoFormatDateInput("2021-03-10"), "2021-03-10");
+  assert.equal(autoFormatDateInput("2021.3.10"), "2021.3.10");
+  assert.equal(autoFormatDateInput(""), "");
 });
 t("formatDate", () => assert.equal(formatDate("2021-03-10"), "2021년 3월 10일"));
 t("compareDates", () => {

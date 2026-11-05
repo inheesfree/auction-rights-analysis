@@ -12,6 +12,7 @@ import {
   type FieldDef,
   type FormValues,
 } from "@/lib/claimForm";
+import { autoFormatDateInput } from "@/lib/dates";
 import { LEASE_REGIONS, LEASE_REGION_LABELS, RIGHT_KIND_LABELS, type RightKind } from "@/lib/types";
 
 const INPUT_CLASS =
@@ -79,7 +80,7 @@ function FieldInput({
           value={value}
           inputMode={def.type === "won" ? "numeric" : undefined}
           placeholder={def.hint}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => onChange(def.type === "date" ? autoFormatDateInput(e.target.value) : e.target.value)}
         />
       );
   }
