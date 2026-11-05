@@ -24,15 +24,10 @@ const fadeUp: Variants = {
   visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.15, duration: 0.6, ease: EASE } }),
 };
 
+// 로고: public/ico_logo_kr.svg (담당자 제공, 110×48)
 function Logo() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" overflow="visible" viewBox="0 0 256 256" aria-hidden="true">
-      <path
-        d="M 64 128 L 64.5 128 L 32 95 L 0 64 L 0 0 L 64 0 L 128 64 L 128 64.5 L 161 32 L 192 0 L 256 0 L 256 64 L 192 128 L 128 128 L 128 192 L 96 223 L 63.5 256 L 0 256 L 0 192 Z M 256 192 L 224 223 L 191.5 256 L 128 256 L 128 192 L 192 128 L 256 128 Z"
-        fill="#192837"
-      />
-    </svg>
-  );
+  // eslint-disable-next-line @next/next/no-img-element -- SVG 파일이라 next/image 최적화가 필요 없다
+  return <img src="/ico_logo_kr.svg" alt="온비드" width={110} height={48} className="h-10 w-auto" />;
 }
 
 function ActionButtons() {
