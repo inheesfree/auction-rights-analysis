@@ -60,7 +60,7 @@ export const RIGHT_KIND_LABELS: Record<RightKind, string> = {
   mortgage: "근저당권",
   jeonse: "전세권",
   lease: "주택임차보증금",
-  tax: "조세",
+  tax: "조세채권",
   publicCharge: "공과금",
   wage: "임금채권",
   provisionalSeizure: "가압류",
