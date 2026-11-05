@@ -81,8 +81,8 @@ export function applyRule5(
 
       const law = item.claim.taxType === "local" ? "지방세기본법 제71조 제6항" : "국세기본법 제35조 제7항";
       transfers.push({ fromKey: item.key, fromLabel: item.label, toKey: tenant.key, toLabel: tenant.label, amount, law });
-      itemLine.notes.push(`규칙 5: 우선징수액 중 ${formatWon(amount)}를 ${tenant.label}에게 대신 변제했습니다. (${law})`);
-      tenantLine.notes.push(`규칙 5: ${item.label}의 우선징수액 중 ${formatWon(amount)}를 대신 변제받았습니다. (${law}) ${NOTE_SCOPE}`);
+      itemLine.notes.push(`규칙 5: 우선징수액 중 ${formatWon(amount)}을 ${tenant.label}에게 대신 변제했습니다. (${law})`);
+      tenantLine.notes.push(`규칙 5: ${item.label}의 우선징수액 중 ${formatWon(amount)}을 대신 변제받았습니다. (${law}) ${NOTE_SCOPE}`);
     }
   }
 
