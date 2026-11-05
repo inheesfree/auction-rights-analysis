@@ -32,14 +32,21 @@ function NoticeBox({ notices }: { notices: Issue[] }) {
   );
 }
 
-export default function ValidationPanel({ result }: { result: ValidationResult }) {
+export default function ValidationPanel({
+  result,
+  successMessage = "입력에 문제가 없습니다. 아래에서 매각대금을 입력하면 결과가 나옵니다.",
+}: {
+  result: ValidationResult;
+  /** 문제가 없을 때 보여줄 문구. 화면마다 다음 단계가 달라서 바꿀 수 있다. */
+  successMessage?: string;
+}) {
   const others = result.issues.filter((issue) => issue.kind !== "unsupported" && issue.kind !== "notice");
 
   if (result.canCalculate) {
     return (
       <div className="space-y-3">
         <p className="rounded border border-green-300 bg-green-50 p-3 text-sm text-green-900 dark:border-green-700 dark:bg-green-950 dark:text-green-200">
-          입력에 문제가 없습니다. 아래에서 매각대금을 입력하면 결과가 나옵니다.
+          {successMessage}
         </p>
         <NoticeBox notices={result.notices} />
       </div>

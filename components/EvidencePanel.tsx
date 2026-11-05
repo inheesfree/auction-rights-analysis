@@ -3,10 +3,10 @@
 
 import type { Evidence } from "@/lib/evidence";
 
-export default function EvidencePanel({ evidence }: { evidence: Evidence }) {
+export default function EvidencePanel({ evidence, showProcess = true }: { evidence: Evidence; showProcess?: boolean }) {
   return (
     <div className="space-y-5">
-      <div className="space-y-3">
+      <div className={showProcess ? "space-y-3" : "hidden"}>
         <h3 className="text-base font-semibold">배분 과정</h3>
         {evidence.steps.map((step, index) => (
           <div key={index} className="space-y-1">
@@ -65,12 +65,16 @@ export default function EvidencePanel({ evidence }: { evidence: Evidence }) {
         </ol>
       </details>
 
-      <p className="text-sm font-medium">{evidence.verification}</p>
-      <ul className="space-y-1 text-sm text-zinc-600 dark:text-zinc-400">
-        {evidence.notices.map((notice, index) => (
-          <li key={index}>※ {notice}</li>
-        ))}
-      </ul>
+      {showProcess ? (
+        <>
+          <p className="text-sm font-medium">{evidence.verification}</p>
+          <ul className="space-y-1 text-sm text-zinc-600 dark:text-zinc-400">
+            {evidence.notices.map((notice, index) => (
+              <li key={index}>※ {notice}</li>
+            ))}
+          </ul>
+        </>
+      ) : null}
     </div>
   );
 }

@@ -97,9 +97,11 @@ function FieldInput({
 interface ClaimFormProps {
   /** 「채권 추가」를 누르면 입력 글자를 부모에게 넘긴다. 채권으로 바꾸는 일은 부모(ClaimEditor)가 한다. */
   onAdd: (kind: RightKind, values: FormValues, taxItems: FormValues[], isEntrusted: boolean) => void;
+  /** 「수임 채권」 체크칸을 보여줄지. 담당자용에서만 쓴다. 기본값은 보여줌. */
+  showEntrusted?: boolean;
 }
 
-export default function ClaimForm({ onAdd }: ClaimFormProps) {
+export default function ClaimForm({ onAdd, showEntrusted = true }: ClaimFormProps) {
   const formId = useId();
   const [kind, setKind] = useState<RightKind>("mortgage");
   const [values, setValues] = useState<FormValues>({});
@@ -199,10 +201,12 @@ export default function ClaimForm({ onAdd }: ClaimFormProps) {
         </fieldset>
       ) : null}
 
-      <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" checked={isEntrusted} onChange={(e) => setIsEntrusted(e.target.checked)} />
-        수임 채권 (우리가 맡은 체납세금)
-      </label>
+      {showEntrusted ? (
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={isEntrusted} onChange={(e) => setIsEntrusted(e.target.checked)} />
+          수임 채권 (우리가 맡은 체납세금)
+        </label>
+      ) : null}
 
       <button
         type="submit"
