@@ -12,6 +12,7 @@ import { judgeTaxVsTax } from "./taxTax";
 import { judgedClaim, judgedTaxPart, swapJudgment, type Judgment, type TaxPart } from "./judgment";
 import {
   judgeChargeVsProvisional,
+  judgeDangHaeSeAmongTaxes,
   judgeGeneralWageBeforeProvisional,
   judgeGeneralWageLast,
   judgeLeaseVsDangHaeSe,
@@ -73,7 +74,12 @@ function judgeOrdered(a: Participant, b: Participant): PairResult {
     case "tax":
       switch (b.kind) {
         case "tax":
-          return a.claim.id === b.claim.id ? { type: "sameClaim" } : judged(judgeTaxVsTax(a.claim, b.claim));
+          if (a.claim.id === b.claim.id) return { type: "sameClaim" };
+          // 당해세는 압류선착주의보다 먼저, 당해세끼리는 안분 (둘 다 일반 조세일 때만 규칙 7)
+          if (a.item.isDangHaeSe === true || b.item.isDangHaeSe === true) {
+            return judged(judgeDangHaeSeAmongTaxes(partOf(a), partOf(b)));
+          }
+          return judged(judgeTaxVsTax(a.claim, b.claim));
         case "charge":
           return judged(swapJudgment(judgeChargeVsTax(b.claim, a.claim)));
         case "wageGeneral":

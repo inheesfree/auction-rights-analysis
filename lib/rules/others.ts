@@ -19,6 +19,43 @@ import { leaseBaseDate } from "./lease";
 
 const ASSUMPTION = "(AI 가정, 담당자 확인 필요)";
 
+/**
+ * 서로 다른 청구서의 조세 세목 두 개 중 당해세가 있을 때 (담당자 확인, 2026-11-04).
+ * - 당해세는 압류선착주의보다 먼저, 모든 조세 중 최선순위다.
+ * - 당해세끼리는 압류 여부와 상관없이 동순위로 안분한다.
+ * 둘 다 당해세가 아니면 이 규칙이 아니라 규칙 7(압류선착주의)로 판단한다.
+ */
+export function judgeDangHaeSeAmongTaxes(a: TaxPart, b: TaxPart): Judgment {
+  const aDang = a.item.isDangHaeSe === true;
+  const bDang = b.item.isDangHaeSe === true;
+  if (!aDang && !bDang) throw new RangeError("당해세가 있는 쌍만 이 규칙으로 판단합니다. 둘 다 일반 조세면 규칙 7로 판단합니다.");
+
+  const dates = [a, b].flatMap((part, index) =>
+    part.item.legalDueDate === null ? [] : [dateLine(`${index === 0 ? "첫째" : "둘째"} 세목 법정기일`, part.item.legalDueDate)],
+  );
+  const base = {
+    ruleNo: 7,
+    ruleName: "당해세 우선 (조세 상호간)",
+    a: judgedTaxPart(a),
+    b: judgedTaxPart(b),
+    comparedDates: dates,
+    law: null,
+    legalBasisUnverified: true,
+  };
+  if (aDang && bDang) {
+    return {
+      ...base,
+      winner: "equal",
+      reason: "당해세끼리는 압류 여부와 상관없이 동순위로 채권액에 비례해 안분합니다. (담당자 업무 기준, 법적 근거 미확인)",
+    };
+  }
+  return {
+    ...base,
+    winner: aDang ? "a" : "b",
+    reason: "당해세는 압류선착주의보다 먼저 모든 조세 중 최선순위로 배분합니다. (담당자 업무 기준, 법적 근거 미확인)",
+  };
+}
+
 /** 근저당권끼리: 등기 접수일이 빠른 쪽이 우선. 같은 날이면 등기 접수번호가 앞선 쪽 (담당자 확인). */
 export function judgeMortgageVsMortgage(a: MortgageClaim, b: MortgageClaim): Judgment {
   const dateA = requireDate(a.registrationDate, "근저당권 등기 접수일");
