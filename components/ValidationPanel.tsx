@@ -39,7 +39,7 @@ export default function ValidationPanel({ result }: { result: ValidationResult }
     return (
       <div className="space-y-3">
         <p className="rounded border border-green-300 bg-green-50 p-3 text-sm text-green-900 dark:border-green-700 dark:bg-green-950 dark:text-green-200">
-          입력에 문제가 없습니다. (순위 분석과 배분 계산은 이후 단계에서 붙습니다.)
+          입력에 문제가 없습니다. 아래에서 매각대금을 입력하면 결과가 나옵니다.
         </p>
         <NoticeBox notices={result.notices} />
       </div>

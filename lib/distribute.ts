@@ -81,6 +81,11 @@ export type DistributionResult =
       judgments: Judgment[];
     };
 
+/** 계산에 성공한 결과. */
+export type DistributionSuccess = Extract<DistributionResult, { ok: true }>;
+/** 계산하지 않은 결과 (이유가 `messages`에 담긴다). */
+export type DistributionStopped = Extract<DistributionResult, { ok: false }>;
+
 /** 입력값 검사를 통과한 채권으로 순위 단계의 덩어리를 만든다. */
 function buildParticipants(
   claims: readonly Claim[],

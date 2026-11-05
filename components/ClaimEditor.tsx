@@ -7,6 +7,7 @@ import { useRef, useState } from "react";
 import ClaimForm from "@/components/ClaimForm";
 import ClaimTable from "@/components/ClaimTable";
 import { buildClaim, type FormValues } from "@/lib/claimForm";
+import DistributionSection from "@/components/DistributionSection";
 import ValidationPanel from "@/components/ValidationPanel";
 import { validateClaims } from "@/lib/validate";
 import type { Claim, RightKind } from "@/lib/types";
@@ -15,6 +16,7 @@ export default function ClaimEditor() {
   const [claims, setClaims] = useState<Claim[]>([]);
   const [notice, setNotice] = useState<string[]>([]);
   const nextId = useRef(1);
+  const validation = validateClaims(claims);
 
   const handleAdd = (
     kind: RightKind,
@@ -54,12 +56,15 @@ export default function ClaimEditor() {
       </section>
 
       {claims.length > 0 ? (
-        <section aria-labelledby="validation-heading" className="space-y-3">
-          <h2 id="validation-heading" className="text-xl font-semibold">
-            ③ 입력값 검사
-          </h2>
-          <ValidationPanel result={validateClaims(claims)} />
-        </section>
+        <>
+          <section aria-labelledby="validation-heading" className="space-y-3">
+            <h2 id="validation-heading" className="text-xl font-semibold">
+              ③ 입력값 검사
+            </h2>
+            <ValidationPanel result={validation} />
+          </section>
+          <DistributionSection claims={claims} validation={validation} />
+        </>
       ) : null}
     </div>
   );
