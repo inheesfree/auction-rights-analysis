@@ -7,6 +7,7 @@
 // PDF·캡처 이미지에서 값을 읽는 기능(AI 읽기)은 별도 작업에서 붙인다.
 
 import { useMemo, useRef, useState } from "react";
+import StepBadge from "@/components/StepBadge";
 import ClaimForm from "@/components/ClaimForm";
 import ClaimTable from "@/components/ClaimTable";
 import EvidencePanel from "@/components/EvidencePanel";
@@ -121,7 +122,7 @@ export default function StatementEditor() {
     <div className="space-y-8">
       <section aria-labelledby="stmt-upload-heading" className="space-y-3">
         <h2 id="stmt-upload-heading" className="text-xl font-semibold">
-          ① 명세서 엑셀 올리기
+          <StepBadge n={1} /> 명세서 엑셀 올리기
         </h2>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           온비드 공매재산명세서를 엑셀(.xls, .xlsx)로 올리면 권리를 읽어 줍니다. 파일은 이 브라우저 안에서만 읽고 서버로 보내거나 저장하지 않습니다.
@@ -207,7 +208,7 @@ export default function StatementEditor() {
 
       <section aria-labelledby="stmt-table-heading" className="space-y-3">
         <h2 id="stmt-table-heading" className="text-xl font-semibold">
-          ② 읽은 내용 확인
+          <StepBadge n={2} /> 읽은 내용 확인
         </h2>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           이름은 개인정보 보호를 위해 가려서 보여줍니다. 읽지 못한 값은 추측해서 채우지 않고 빈칸으로 둡니다. 「원본 위치」는 엑셀의 시트와 행입니다.
@@ -244,7 +245,7 @@ export default function StatementEditor() {
       {claims.length > 0 ? (
         <section aria-labelledby="stmt-validation-heading" className="space-y-3">
           <h2 id="stmt-validation-heading" className="text-xl font-semibold">
-            ③ 입력값 검사
+            <StepBadge n={3} /> 입력값 검사
           </h2>
           <ValidationPanel result={validation} successMessage="입력에 문제가 없습니다. 읽은 값을 확인하면 아래에 권리 순위가 나옵니다." />
         </section>
@@ -257,7 +258,7 @@ export default function StatementEditor() {
       ) : !outcome.analysis.ok ? (
         <section aria-labelledby="stmt-stop-heading" className="space-y-2">
           <h2 id="stmt-stop-heading" className="text-xl font-semibold">
-            ④ 권리 순위
+            <StepBadge n={4} /> 권리 순위
           </h2>
           <div role="alert" className="space-y-2 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200">
             <p className="font-semibold">이 앱이 분석하지 않는 경우</p>
@@ -272,7 +273,7 @@ export default function StatementEditor() {
         <>
           <section aria-labelledby="stmt-rank-heading" className="space-y-3">
             <h2 id="stmt-rank-heading" className="text-xl font-semibold">
-              ④ 권리 순위
+              <StepBadge n={4} /> 권리 순위
             </h2>
             <StatementRanking analysis={outcome.analysis} />
             <ul className="space-y-1 text-sm text-zinc-600 dark:text-zinc-400">
@@ -284,7 +285,7 @@ export default function StatementEditor() {
 
           <section aria-labelledby="stmt-evidence-heading" className="space-y-3">
             <h2 id="stmt-evidence-heading" className="text-xl font-semibold">
-              ⑤ 분석 근거
+              <StepBadge n={5} /> 분석 근거
             </h2>
             <EvidencePanel
               evidence={{

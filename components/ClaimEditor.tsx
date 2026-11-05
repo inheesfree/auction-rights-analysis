@@ -4,6 +4,7 @@
 // Plan SC: 작업 3 — 입력 → 확인 표. 입력값 검사와 계산은 이후 작업(4~)에서 붙인다.
 
 import { useRef, useState } from "react";
+import StepBadge from "@/components/StepBadge";
 import ClaimForm from "@/components/ClaimForm";
 import ClaimTable from "@/components/ClaimTable";
 import { buildClaim, type FormValues } from "@/lib/claimForm";
@@ -34,7 +35,7 @@ export default function ClaimEditor() {
     <div className="space-y-8">
       <section aria-labelledby="input-heading" className="space-y-3">
         <h2 id="input-heading" className="text-xl font-semibold">
-          ① 채권자 직접 입력
+          <StepBadge n={1} /> 채권자 직접 입력
         </h2>
         <ClaimForm onAdd={handleAdd} />
         {notice.length > 0 ? (
@@ -46,7 +47,7 @@ export default function ClaimEditor() {
 
       <section aria-labelledby="table-heading" className="space-y-3">
         <h2 id="table-heading" className="text-xl font-semibold">
-          ② 입력한 내용 확인
+          <StepBadge n={2} /> 입력한 내용 확인
         </h2>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           빈칸은 <span className="rounded bg-red-100 px-1.5 py-0.5 font-medium text-red-700 dark:bg-red-950 dark:text-red-300">(빈칸)</span>
@@ -59,7 +60,7 @@ export default function ClaimEditor() {
         <>
           <section aria-labelledby="validation-heading" className="space-y-3">
             <h2 id="validation-heading" className="text-xl font-semibold">
-              ③ 입력값 검사
+              <StepBadge n={3} /> 입력값 검사
             </h2>
             <ValidationPanel result={validation} />
           </section>

@@ -93,6 +93,39 @@ body {
   font-family: var(--font-heading);
   font-weight: 700;
 }
+.app-body section[aria-labelledby] h2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+/* 구역 제목 앞의 「STEP 1」 표시 */
+.step-badge {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 48px;
+  padding: 5px 8px 6px;
+  border-radius: 12px;
+  background: var(--color-accent);
+  color: #fff;
+  line-height: 1;
+  box-shadow: 0 4px 12px rgba(115, 66, 226, 0.25);
+}
+.step-badge span {
+  font-family: var(--font-body), sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  opacity: 0.85;
+}
+.step-badge b {
+  margin-top: 3px;
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 700;
+}
 /* 입력칸 */
 .app-body input:not([type="file"]),
 .app-body select,

@@ -7,6 +7,7 @@
 // 입력값 검사를 통과한 채권만 계산한다 (ClaimEditor가 검사 결과를 넘겨 준다).
 
 import { useId, useMemo, useState } from "react";
+import StepBadge from "@/components/StepBadge";
 import DistributionTable from "@/components/DistributionTable";
 import EvidencePanel from "@/components/EvidencePanel";
 import type { AcquiredDeposit } from "@/lib/acquire";
@@ -62,7 +63,7 @@ export default function DistributionSection({
     <div className="space-y-8">
       <section aria-labelledby="sale-heading" className="space-y-3">
         <h2 id="sale-heading" className="text-xl font-semibold">
-          ④ 금액 입력
+          <StepBadge n={4} /> 금액 입력
         </h2>
         <fieldset className="flex flex-wrap gap-4 text-sm">
           <legend className="mb-1 font-medium">작업 선택</legend>
@@ -97,7 +98,7 @@ export default function DistributionSection({
       </section>
 
       {!validation.canCalculate ? (
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">③ 입력값 검사를 통과해야 계산할 수 있습니다.</p>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">STEP 3 입력값 검사를 통과해야 계산할 수 있습니다.</p>
       ) : outcome === null ? (
         <p className="text-sm text-zinc-600 dark:text-zinc-400">{saleLabel}을 입력하면 결과가 나옵니다.</p>
       ) : (
@@ -112,7 +113,7 @@ function Result({ outcome, claims, isEntrust }: { outcome: Outcome; claims: Clai
     return (
       <section aria-labelledby="result-heading" className="space-y-3">
         <h2 id="result-heading" className="text-xl font-semibold">
-          ⑤ 결과
+          <StepBadge n={5} /> 결과
         </h2>
         <p role="alert" className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-900 dark:border-red-700 dark:bg-red-950 dark:text-red-200">
           계산하지 못했습니다: {outcome.message}
@@ -126,7 +127,7 @@ function Result({ outcome, claims, isEntrust }: { outcome: Outcome; claims: Clai
     return (
       <section aria-labelledby="result-heading" className="space-y-3">
         <h2 id="result-heading" className="text-xl font-semibold">
-          ⑤ 결과
+          <StepBadge n={5} /> 결과
         </h2>
         <div role="alert" className="space-y-2 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200">
           <p className="font-semibold">{STOP_TITLES[result.reason]}</p>
@@ -148,7 +149,7 @@ function Result({ outcome, claims, isEntrust }: { outcome: Outcome; claims: Clai
     <>
       <section aria-labelledby="result-heading" className="space-y-4">
         <h2 id="result-heading" className="text-xl font-semibold">
-          ⑤ 결과
+          <StepBadge n={5} /> 결과
         </h2>
         {isEntrust ? <Recovery entrusted={entrusted} paidByClaim={result.paidByClaim} /> : null}
         <DistributionTable result={result} />
@@ -160,7 +161,7 @@ function Result({ outcome, claims, isEntrust }: { outcome: Outcome; claims: Clai
 
       <section aria-labelledby="evidence-heading" className="space-y-3">
         <h2 id="evidence-heading" className="text-xl font-semibold">
-          ⑥ 분석 근거
+          <StepBadge n={6} /> 분석 근거
         </h2>
         <EvidencePanel evidence={evidence} />
       </section>
