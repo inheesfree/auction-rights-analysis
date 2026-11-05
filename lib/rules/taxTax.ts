@@ -59,7 +59,7 @@ export function judgeTaxVsTax(a: TaxClaim, b: TaxClaim): Judgment {
       comparedDates: [],
       law: "국세기본법 제37조, 지방세기본법 제74조",
       legalBasisUnverified: false,
-      reason: `납세담보가 있는 ${winner === "a" ? base.a.label : base.b.label}이(가) 다른 조세보다 우선합니다.`,
+      reason: `납세담보가 있는 쪽이 다른 조세보다 우선합니다. (우선: ${winner === "a" ? base.a.label : base.b.label})`,
     };
   }
 
@@ -83,7 +83,7 @@ export function judgeTaxVsTax(a: TaxClaim, b: TaxClaim): Judgment {
       comparedDates: dates,
       law: lawSeizure,
       legalBasisUnverified: false,
-      reason: `먼저 압류한 ${winner === "a" ? base.a.label : base.b.label}이(가) 우선합니다. (압류선착주의)`,
+      reason: `먼저 압류한 쪽이 우선합니다. (압류선착주의, 우선: ${winner === "a" ? base.a.label : base.b.label})`,
     };
   }
   if (seizureA !== null || seizureB !== null) {
@@ -94,7 +94,7 @@ export function judgeTaxVsTax(a: TaxClaim, b: TaxClaim): Judgment {
       comparedDates: dates,
       law: lawSeizure,
       legalBasisUnverified: false,
-      reason: `압류한 ${winner === "a" ? base.a.label : base.b.label}이(가) 교부청구만 한 조세보다 우선합니다. (압류선착주의)`,
+      reason: `압류한 쪽이 교부청구만 한 쪽보다 우선합니다. (압류선착주의, 우선: ${winner === "a" ? base.a.label : base.b.label})`,
     };
   }
 

@@ -61,7 +61,7 @@ function validateClaim(claim: Claim): Issue[] {
     return issues;
   }
 
-  need(claim.creditor, "채권자");
+  // 채권자 이름은 계산에 필요하지 않다 (서류에 이름이 없는 가압류권자 등이 있다). 비어 있으면 "채권자 미입력"으로 표시한다.
   need(claim.amount, "채권액");
 
   switch (claim.kind) {

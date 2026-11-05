@@ -44,7 +44,7 @@ export function judgeMortgageVsTax(mortgage: MortgageClaim, tax: TaxPart): Judgm
   };
 
   if (order < 0) {
-    return { ...base, winner: "b", legalBasisUnverified: false, reason: `${taxName} 법정기일이 근저당권 설정일보다 빨라 ${taxName}이 우선합니다.` };
+    return { ...base, winner: "b", legalBasisUnverified: false, reason: `${taxName} 법정기일이 근저당권 설정일보다 빨라 ${taxName}가 우선합니다.` };
   }
   if (order > 0) {
     return { ...base, winner: "a", legalBasisUnverified: false, reason: `근저당권 설정일이 ${taxName} 법정기일보다 빨라 근저당권이 우선합니다.` };
@@ -53,6 +53,6 @@ export function judgeMortgageVsTax(mortgage: MortgageClaim, tax: TaxPart): Judgm
     ...base,
     winner: "b",
     legalBasisUnverified: true,
-    reason: `같은 날이면 ${taxName}이 우선합니다. (담당자 업무 기준, 법적 근거 미확인)`,
+    reason: `같은 날이면 ${taxName}가 우선합니다. (담당자 업무 기준, 법적 근거 미확인)`,
   };
 }

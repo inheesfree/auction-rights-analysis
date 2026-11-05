@@ -41,12 +41,12 @@ export function judgeLeaseVsTax(lease: LeaseClaim, tax: TaxPart): Judgment {
     return { ...base, winner: "a", legalBasisUnverified: false, reason: `임차인 기준일이 ${taxName} 법정기일보다 빨라 임차보증금이 우선합니다.` };
   }
   if (order > 0) {
-    return { ...base, winner: "b", legalBasisUnverified: false, reason: `${taxName} 법정기일이 임차인 기준일보다 빨라 ${taxName}이 우선합니다.` };
+    return { ...base, winner: "b", legalBasisUnverified: false, reason: `${taxName} 법정기일이 임차인 기준일보다 빨라 ${taxName}가 우선합니다.` };
   }
   return {
     ...base,
     winner: "b",
     legalBasisUnverified: true,
-    reason: `같은 날이면 ${taxName}이 우선합니다. (담당자 업무 기준, 법적 근거 미확인)`,
+    reason: `같은 날이면 ${taxName}가 우선합니다. (담당자 업무 기준, 법적 근거 미확인)`,
   };
 }
