@@ -1,6 +1,7 @@
 // Design Ref: §2.2 ③, §2.4 — 확인 표. 담당자용·외부 사용자용이 같이 쓰는 부품이다.
 // Plan SC: 작업 3 — 빈칸은 추측해서 채우지 않고 눈에 띄게 표시한다.
 
+import LeaseDateEditor from "@/components/LeaseDateEditor";
 import { toClaimRow, type Cell } from "@/lib/claimForm";
 import { RIGHT_KIND_LABELS, type Claim } from "@/lib/types";
 
@@ -34,9 +35,11 @@ interface ClaimTableProps {
   claims: Claim[];
   /** 주면 줄마다 삭제 버튼이 나타난다. */
   onRemove?: (id: string) => void;
+  /** 주면 임차인 줄에 전입일자·확정일자를 바로 고치는 입력창이 나타난다. */
+  onEditLeaseDates?: (id: string, moveInDate: string, fixedDate: string) => void;
 }
 
-export default function ClaimTable({ claims, onRemove }: ClaimTableProps) {
+export default function ClaimTable({ claims, onRemove, onEditLeaseDates }: ClaimTableProps) {
   if (claims.length === 0) {
     return (
       <p className="rounded border border-dashed border-zinc-300 p-6 text-center text-zinc-500 dark:border-zinc-700">
@@ -88,7 +91,15 @@ export default function ClaimTable({ claims, onRemove }: ClaimTableProps) {
                 {/* 직접 입력한 값은 원본 위치가 없다. 파일에서 읽은 값은 "시트 행" 위치를 보여준다. */}
                 <td className="px-3 py-2 text-zinc-500">{row.source ?? "직접 입력"}</td>
                 {onRemove ? (
-                  <td className="px-3 py-2">
+                  <td className="space-y-1 px-3 py-2">
+                    {onEditLeaseDates && claim.kind === "lease" ? (
+                      <LeaseDateEditor
+                        key={`${claim.id}-${claim.moveInDate}-${claim.fixedDate}`}
+                        moveInDate={claim.moveInDate}
+                        fixedDate={claim.fixedDate}
+                        onSave={(moveIn, fixed) => onEditLeaseDates(claim.id, moveIn, fixed)}
+                      />
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => onRemove(row.id)}

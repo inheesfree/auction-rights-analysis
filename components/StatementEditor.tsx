@@ -13,6 +13,7 @@ import EvidencePanel from "@/components/EvidencePanel";
 import StatementRanking from "@/components/StatementRanking";
 import ValidationPanel from "@/components/ValidationPanel";
 import { buildClaim, type FormValues } from "@/lib/claimForm";
+import { parseDate } from "@/lib/dates";
 import { MAX_EXCEL_BYTES, readWorkbookGrids } from "@/lib/excelFile";
 import { maskClaim } from "@/lib/privacy";
 import { analyzeStatement, type StatementAnalysis } from "@/lib/statement";
@@ -211,11 +212,23 @@ export default function StatementEditor() {
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           이름은 개인정보 보호를 위해 가려서 보여줍니다. 읽지 못한 값은 추측해서 채우지 않고 빈칸으로 둡니다. 「원본 위치」는 엑셀의 시트와 행입니다.
         </p>
-        <ClaimTable claims={shown} onRemove={(id) => setClaims((prev) => prev.filter((c) => c.id !== id))} />
+        <ClaimTable
+          claims={shown}
+          onRemove={(id) => setClaims((prev) => prev.filter((c) => c.id !== id))}
+          onEditLeaseDates={(id, moveIn, fixed) =>
+            setClaims((prev) =>
+              prev.map((c) =>
+                c.id === id && c.kind === "lease"
+                  ? { ...c, moveInDate: parseDate(moveIn), fixedDate: parseDate(fixed) }
+                  : c,
+              ),
+            )
+          }
+        />
         {pendingConfirm ? (
           <div role="alert" className="space-y-2 rounded border border-sky-300 bg-sky-50 p-3 text-sm text-sky-900 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-200">
             <p>
-              엑셀에서 읽은 값입니다. 위 표를 원본 명세서와 맞춰 보고, 틀리거나 빠진 권리는 삭제한 뒤 아래 직접 입력으로 다시 넣어 주세요. 확인하기 전에는 분석하지 않습니다.
+              엑셀에서 읽은 값입니다. 위 표를 원본 명세서와 맞춰 보고, 임차인의 전입일자·확정일자는 줄의 「날짜 입력」으로 바로 고칠 수 있고, 틀리거나 빠진 다른 권리는 삭제한 뒤 아래 직접 입력으로 다시 넣어 주세요. 확인하기 전에는 분석하지 않습니다.
             </p>
             <button
               type="button"
