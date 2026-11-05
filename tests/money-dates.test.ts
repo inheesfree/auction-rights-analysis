@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "vitest";
-import { isWon, parseWon, formatWon, sumWon } from "../lib/money";
+import { isWon, parseWon, formatWon, sumWon, autoFormatWonInput } from "../lib/money";
 import { autoFormatDateInput, isValidDate, parseDate, formatDate, compareDates, laterDate, addDays } from "../lib/dates";
 
 
@@ -82,4 +82,17 @@ t("addDays: 다음 날, 월·연말·윤년 경계", () => {
   assert.equal(addDays("2021-02-28", 1), "2021-03-01");
   assert.equal(addDays("2021-03-01", -1), "2021-02-28");
   assert.throws(() => addDays("2021-03-10", 0.5), RangeError);
+});
+
+test("autoFormatWonInput: 숫자만 있으면 1000단위 쉼표를 넣고, 이미 쉼표가 있어도 다시 맞춘다", () => {
+  assert.equal(autoFormatWonInput("25000000"), "25,000,000");
+  assert.equal(autoFormatWonInput("1000"), "1,000");
+  assert.equal(autoFormatWonInput("999"), "999");
+  assert.equal(autoFormatWonInput("2,5000,000"), "25,000,000");
+  assert.equal(autoFormatWonInput(""), "");
+  // 숫자가 아닌 글자가 섞이면 건드리지 않는다 (읽을 수 있는지는 parseWon이 따진다)
+  assert.equal(autoFormatWonInput("100만원"), "100만원");
+  assert.equal(autoFormatWonInput("1.5"), "1.5");
+  // 쉼표가 들어간 글자도 parseWon이 그대로 읽는다
+  assert.equal(parseWon(autoFormatWonInput("25000000")), 25_000_000);
 });

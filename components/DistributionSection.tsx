@@ -14,7 +14,7 @@ import type { AcquiredDeposit } from "@/lib/acquire";
 import { claimLabel } from "@/lib/claimLabel";
 import { distribute, type DistributionResult } from "@/lib/distribute";
 import { buildEvidence } from "@/lib/evidence";
-import { formatWon, parseWon } from "@/lib/money";
+import { formatWon, parseWon, autoFormatWonInput } from "@/lib/money";
 import type { Claim } from "@/lib/types";
 import type { ValidationResult } from "@/lib/validate";
 
@@ -87,7 +87,7 @@ export default function DistributionSection({
             className="w-full rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
             placeholder={isEntrust ? "담당자가 직접 입력합니다. 예: 250,000,000" : "예: 250,000,000"}
             value={saleText}
-            onChange={(event) => setSaleText(event.target.value)}
+            onChange={(event) => setSaleText(autoFormatWonInput(event.target.value))}
           />
           {saleText.trim() !== "" && sale === null ? (
             <p className="mt-1 text-sm text-red-700 dark:text-red-300">
