@@ -13,7 +13,7 @@ const VIDEO_URL =
   "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260518_003132_8b7edcb6-c64d-4a52-a9ca-879942e122ad.mp4";
 
 const NAV_LINKS = [
-  { label: "명세서 분석", href: "/statement" },
+  { label: "입찰고객용", href: "/statement" },
   { label: "담당자용", href: "/officer" },
 ] as const;
 
