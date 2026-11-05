@@ -105,7 +105,7 @@ t("배분: 소액임차가 아닌 임차인과 일반 임금채권은 이 단계
   assert.equal(r.lines.length, 0); assert.equal(r.remaining, 500_000_000);
 });
 t("배분: 기준표에 없는 지역·시기는 계산을 멈추고 이유를 알림", () => {
-  const r = allocateSuperPriority(100_000_000, [lease("50000000", "2023-03-01", "2023-03-02", "metro")]) as any;
+  const r = allocateSuperPriority(100_000_000, [lease("50000000", "2023-03-01", "2023-03-02", "other")]) as any;
   assert.equal(r.ok, false); assert.match(r.unsupported[0], /기준표가 없는 지역/);
   const old = allocateSuperPriority(100_000_000, [mortgage("2005-01-01"), lease("50000000", "2005-02-01", "2005-02-02")]) as any;
   assert.equal(old.ok, false);
@@ -122,4 +122,14 @@ t("입력 검사: 임차인 소재지 구분 필수, 상가는 월세 입력 가
   assert.equal(house.monthlyRent, null); // 주택이면 월세는 받지 않음
   const nf = validateClaims([lease("100000000", "2021-03-02", "")]);
   assert.equal(nf.canCalculate, true); assert.match(nf.notices[0].message, /소액임차인에 해당하는 경우/);
+});
+
+t("광역시 소액임차 기준표(2023.2.21.): 보증금 8,500만원 이하·최우선 2,800만원, 시행일 전은 다루지 않음", () => {
+  const metro = (deposit: string) => ({ ...lease(deposit, "2025-01-22", "2025-01-23"), region: "metro" }) as any;
+  const small = decideSmallLease(metro("85000000"), []) as any;
+  assert.equal(small.status, "small"); assert.equal(small.entitlement, 28_000_000);
+  assert.equal((decideSmallLease(metro("85000001"), []) as any).status, "notSmall");
+  assert.equal((decideSmallLease(metro("20000000"), []) as any).entitlement, 20_000_000); // min(보증금, 일정액)
+  const before = decideSmallLease({ ...lease("50000000", "2022-01-01", "2022-01-02"), region: "metro" } as any, []) as any;
+  assert.equal(before.status, "unsupported"); // 2023.2.21. 이전 광역시 기준표는 없음
 });

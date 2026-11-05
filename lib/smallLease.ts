@@ -1,7 +1,7 @@
 // Design Ref: §3.2 — 소액임차인 최우선변제 기준표와 판정
 // Plan SC: 작업 7 — 소액임차 기준은 선순위 담보물권 설정 당시의 시행령 기준을 쓴다 (주택임대차보호법 시행령 제10조)
 //
-// [확인 필요] 기준표는 서울특별시만 담당자가 제공한 값(2026-11-04)이 들어 있다.
+// [확인 필요] 기준표는 서울특별시(담당자 제공, 2026-11-04)와 광역시 등의 2023.2.21. 시행분(담당자 승인, 2026-11-05)만 들어 있다.
 // 다른 지역은 보증금 기준(이하)을 확인하지 못해 넣지 않았고, 그 지역 임차인이 입력되면
 // "이 앱이 다루지 않는 경우"로 알린다. 지역을 추가하려면 `SMALL_LEASE_TABLE`에 줄만 더하면 된다.
 // 2010-07-26 이전에 설정된 담보물권도 기준표가 없어 다루지 않는다.
@@ -30,6 +30,10 @@ export const SMALL_LEASE_TABLE: Partial<Record<LeaseRegion, SmallLeaseRow[]>> = 
     { startDate: "2014-01-01", depositLimit: 95_000_000, priorityAmount: 32_000_000 },
     { startDate: "2010-07-26", depositLimit: 75_000_000, priorityAmount: 25_000_000 },
   ],
+  // 광역시(과밀억제권역·군지역 제외)·안산·광주·파주·이천·평택: 2023.2.21. 시행분만 넣었다.
+  // 최우선변제 2,800만원은 법제처 현행본(시행령 제10조)과 일치한다. 보증금 기준 8,500만원은 법제처에서 직접
+  // 확인하지 못했고, 담당자가 승인했다. 이 전 시행분은 기준표가 없어 다루지 않는다.
+  metro: [{ startDate: "2023-02-21", depositLimit: 85_000_000, priorityAmount: 28_000_000 }],
 };
 
 /** 지역과 기준 시점에 맞는 기준표 줄을 찾는다. 기준표에 없으면 `null`(다루지 않는 경우). */
@@ -77,7 +81,7 @@ export function decideSmallLease(lease: LeaseClaim, claims: readonly Claim[]): S
   if (row === null) {
     return {
       status: "unsupported",
-      reason: `${label}: 소액임차 기준표가 없는 지역·시기(기준 시점 ${baseDate})입니다. 현재는 서울특별시의 2010-07-26 이후 기준만 계산합니다.`,
+      reason: `${label}: 소액임차 기준표가 없는 지역·시기(기준 시점 ${baseDate})입니다. 현재는 서울특별시의 2010-07-26 이후, 광역시 등의 2023-02-21 이후 기준만 계산합니다.`,
     };
   }
   if (lease.amount > row.depositLimit) return { status: "notSmall", baseDate, row };

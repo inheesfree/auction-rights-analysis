@@ -88,6 +88,6 @@ test("순환이 있으면 같은 순위로 묶어 보여주고 안내한다", ()
 test("규칙이 없거나 기준표가 없으면 분석하지 않고 이유를 알린다", () => {
   const stopped = analyzeStatement([claim("publicCharge", { creditor: "가", amount: "1", dueDate: "2020-01-01" }), claim("publicCharge", { creditor: "나", amount: "1", dueDate: "2020-01-01" })]);
   expect(stopped.ok).toBe(false);
-  const metro = analyzeStatement([{ ...lease("노정식", "50000000", "2025-01-22", "2025-01-23"), region: "metro" } as Claim]);
-  expect(metro.ok).toBe(false);
+  const unsupportedRegion = analyzeStatement([{ ...lease("노정식", "50000000", "2025-01-22", "2025-01-23"), region: "other" } as Claim]);
+  expect(unsupportedRegion.ok).toBe(false);
 });

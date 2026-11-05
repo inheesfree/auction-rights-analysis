@@ -128,7 +128,7 @@ t("근저당권끼리 등기 순서·접수번호, 공과금 vs 담보권", () =
 });
 
 t("소액임차 기준표가 없는 지역은 계산하지 않음", () => {
-  const r = distribute(100_000_000, [lease("50000000", "2023-03-01", "2023-03-02", "metro")]) as any;
+  const r = distribute(100_000_000, [lease("50000000", "2023-03-01", "2023-03-02", "other")]) as any;
   assert.equal(r.ok, false); assert.equal(r.reason, "unsupported");
 });
 

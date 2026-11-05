@@ -85,8 +85,8 @@ export default function ClaimTable({ claims, onRemove }: ClaimTableProps) {
                 <td className="px-3 py-2">
                   <CellList cells={row.notes} />
                 </td>
-                {/* 직접 입력한 값이므로 원본 문서 위치가 없다. 파일에서 읽는 기능(작업 17~19)이 생기면 위치가 들어간다. */}
-                <td className="px-3 py-2 text-zinc-500">직접 입력</td>
+                {/* 직접 입력한 값은 원본 위치가 없다. 파일에서 읽은 값은 "시트 행" 위치를 보여준다. */}
+                <td className="px-3 py-2 text-zinc-500">{row.source ?? "직접 입력"}</td>
                 {onRemove ? (
                   <td className="px-3 py-2">
                     <button

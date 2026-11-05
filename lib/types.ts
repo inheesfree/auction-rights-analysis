@@ -85,6 +85,8 @@ interface ClaimBase {
   requestedDistribution: Blank<boolean>;
   /** 수임 채권(우리가 맡은 체납세금) 여부. 담당자용에서만 표시한다. */
   isEntrusted?: boolean;
+  /** 서류에서 읽은 값이면 원본 위치(예: "Page 2 3행"). 직접 입력이면 없다. */
+  source?: string;
 }
 
 /** 근저당권. */

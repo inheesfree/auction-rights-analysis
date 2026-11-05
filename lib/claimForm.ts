@@ -290,6 +290,8 @@ export interface ClaimRow {
   registrationNumber: Cell | null;
   /** 그 밖에 알아 둘 것 (주택 여부, 국세/지방세 등). */
   notes: Cell[];
+  /** 서류에서 읽은 값의 원본 위치. 직접 입력이면 `null`. */
+  source: string | null;
 }
 
 const BLANK = "(빈칸)";
@@ -321,6 +323,7 @@ export function toClaimRow(claim: Claim): ClaimRow {
         : { text: formatWon(claim.amount), blank: false },
     registrationNumber: null,
     notes: [],
+    source: claim.source ?? null,
   };
 
   if (claim.requestedDistribution !== null) {
