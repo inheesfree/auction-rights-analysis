@@ -133,7 +133,10 @@ export default function HomeHero() {
             animate="visible"
             style={{ fontSize: "clamp(0.9rem, 2.5vw, 1.1rem)", lineHeight: 1.65, opacity: 0.8, maxWidth: 560, marginBottom: 32 }}
           >
-            온비드 공매재산명세서 엑셀을 올리면 권리를 읽어 순위를 정하고, 어떤 권리를 매수인이 인수하는지 법령 기준과 함께 보여줍니다. 계산은 AI가 아닌 정해진 규칙으로만 합니다.
+            공매재산명세서만 업로드하면 부동산의 권리관계를 자동으로 분석해 주는 스마트 공매 권리분석 서비스입니다.
+            <br />
+            <br />
+            공매 물건에 설정된 근저당권, 압류, 가압류, 임차권 등 다양한 권리정보를 분석하고, 권리 간 우선순위와 예상 배분순위를 한눈에 확인할 수 있도록 도와줍니다.
           </motion.p>
           <motion.div custom={2} variants={fadeUp} initial="hidden" animate="visible">
             <motion.div whileHover={{ scale: 1.04, filter: "brightness(1.1)" }} whileTap={{ scale: 0.96 }} className="inline-block">
